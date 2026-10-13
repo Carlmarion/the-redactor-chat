@@ -1,0 +1,19 @@
+{
+  "users": ["anouk", "sanne", "bram", "lotte", "daan", "emma", "joost", "yusuf"],
+  "groups": {
+    "all-staff": ["anouk", "sanne", "bram", "lotte", "daan", "emma", "joost", "yusuf"],
+    "hr-team": ["anouk", "sanne"],
+    "payroll": ["sanne"],
+    "finance-team": ["bram", "lotte"],
+    "eng-team": ["daan", "emma", "yusuf"],
+    "management": ["joost", "anouk"]
+  },
+  "folders": {
+    "/Public": ["all-staff"],
+    "/HR": ["hr-team"],
+    "/HR/Payroll": ["payroll"],
+    "/Finance": ["finance-team", "management"],
+    "/Engineering": ["eng-team"],
+    "/Management": ["management"]
+  }
+}
