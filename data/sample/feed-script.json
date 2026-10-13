@@ -1,0 +1,17 @@
+{
+  "note": "Times are seconds after the replay starts. The feed serves each event from deliver_at_s on, with modified_at = start + modified_at_s, unless modified_at is given as an absolute time. 'text' is what the document source returns for that document from that moment on; it is never part of the served event.",
+  "events": [
+    { "trap": "T3", "deliver_at_s": 10, "modified_at_s": 10, "event": { "doc_id": "d02", "path": "/Public/handbook/leave-policy.md", "action": "update" }, "text": "revisions/d02/1.md" },
+    { "trap": "T1", "deliver_at_s": 20, "modified_at_s": 20, "event": { "doc_id": "d05", "path": "/HR/Payroll/salary-bands.md", "action": "update" } },
+    { "trap": "T2", "deliver_at_s": 30, "modified_at_s": 30, "event": { "doc_id": "d17", "path": "/Public/announcements/reorganisation-plan-2027.md", "action": "update" } },
+    { "trap": "T4", "deliver_at_s": 40, "modified_at_s": 10, "event": { "doc_id": "d02", "path": "/Public/handbook/leave-policy.md", "action": "update" }, "duplicate_of": "T3" },
+    { "trap": "T4", "deliver_at_s": 45, "modified_at": "2026-10-12T17:00:00+02:00", "event": { "doc_id": "d07", "path": "/Engineering/password-policy-old.md", "action": "update" }, "stale": true },
+    { "trap": "T5", "deliver_at_s": 50, "modified_at_s": 50, "event": { "doc_id": "d20", "path": "/Public/engineering/architecture.md", "action": "update" } },
+    { "trap": "T5", "deliver_at_s": 50.5, "modified_at_s": 50.5, "event": { "doc_id": "d20", "path": "/Public/engineering/architecture.md", "action": "update" }, "text": "revisions/d20/1.md" },
+    { "trap": "T5", "deliver_at_s": 51, "modified_at_s": 51, "event": { "doc_id": "d20", "path": "/Engineering/platform/architecture.md", "action": "update" } },
+    { "trap": "T12", "deliver_at_s": 60, "modified_at_s": 60, "event": { "action": "access", "change": { "op": "remove_member", "group": "finance-team", "user": "bram" } } },
+    { "trap": "T6", "deliver_at_s": 70, "modified_at_s": 70, "event": { "doc_id": "d16", "path": "/Engineering/incident-2026-09.md", "action": "delete" } },
+    { "trap": "C4", "deliver_at_s": 80, "modified_at_s": 80, "event": { "doc_id": "d21", "path": "/Public/handbook/bike-lease.md", "action": "create" }, "text": "revisions/d21/1.md" },
+    { "trap": "C4", "deliver_at_s": 90, "modified_at_s": 90, "event": { "doc_id": "d04", "path": "/Public/handbook/working-from-home.md", "action": "rename" } }
+  ]
+}

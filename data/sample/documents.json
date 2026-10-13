@@ -1,0 +1,25 @@
+{
+  "exported_at": "2026-10-13T08:00:00+02:00",
+  "documents": [
+    { "doc_id": "d01", "path": "/Public/handbook/welcome.md", "title": "Welcome to Noordlicht", "folder": "/Public", "allowed": ["all-staff"], "url": "https://drive.example/noordlicht/d01" },
+    { "doc_id": "d02", "path": "/Public/handbook/leave-policy.md", "title": "Leave policy", "folder": "/Public", "allowed": ["all-staff"], "url": "https://drive.example/noordlicht/d02" },
+    { "doc_id": "d03", "path": "/Public/handbook/expenses.md", "title": "Expense claims", "folder": "/Public", "allowed": ["all-staff"], "url": "https://drive.example/noordlicht/d03" },
+    { "doc_id": "d04", "path": "/Public/handbook/remote-work.md", "title": "Remote work", "folder": "/Public", "allowed": ["all-staff"], "url": "https://drive.example/noordlicht/d04" },
+    { "doc_id": "d05", "path": "/Public/handbook/salary-bands.md", "title": "Salary bands 2026", "folder": "/Public", "allowed": ["all-staff"], "url": "https://drive.example/noordlicht/d05" },
+    { "doc_id": "d06", "path": "/Public/kantoor/huisregels.md", "title": "Huisregels kantoor Amsterdam", "folder": "/Public", "allowed": ["all-staff"], "url": "https://drive.example/noordlicht/d06" },
+    { "doc_id": "d07", "path": "/Public/it/password-policy.md", "title": "Password policy", "folder": "/Public", "allowed": ["all-staff"], "url": "https://drive.example/noordlicht/d07" },
+    { "doc_id": "d08", "path": "/HR/employee-handbook.md", "title": "Employee handbook (HR edition)", "folder": "/HR", "allowed": ["hr-team"], "url": "https://drive.example/noordlicht/d08" },
+    { "doc_id": "d09", "path": "/HR/hiring-process.md", "title": "Hiring process", "folder": "/HR", "allowed": ["hr-team"], "url": "https://drive.example/noordlicht/d09" },
+    { "doc_id": "d10", "path": "/HR/Payroll/payroll-calendar.md", "title": "Payroll calendar 2026", "folder": "/HR/Payroll", "allowed": ["payroll"], "url": "https://drive.example/noordlicht/d10" },
+    { "doc_id": "d11", "path": "/HR/Payroll/bonus-scheme.md", "title": "Bonus scheme", "folder": "/HR/Payroll", "allowed": ["payroll"], "url": "https://drive.example/noordlicht/d11" },
+    { "doc_id": "d12", "path": "/Finance/budget-2027-draft.md", "title": "Budget 2027 (draft)", "folder": "/Finance", "allowed": ["finance-team", "management"], "url": "https://drive.example/noordlicht/d12" },
+    { "doc_id": "d13", "path": "/Finance/betalingstermijnen.md", "title": "Betalingstermijnen leveranciers", "folder": "/Finance", "allowed": ["finance-team", "management"], "url": "https://drive.example/noordlicht/d13" },
+    { "doc_id": "d14", "path": "/Engineering/on-call.md", "title": "On-call rota and escalation", "folder": "/Engineering", "allowed": ["eng-team"], "url": "https://drive.example/noordlicht/d14" },
+    { "doc_id": "d15", "path": "/Engineering/deploy-guide.md", "title": "Deployment guide", "folder": "/Engineering", "allowed": ["eng-team"], "url": "https://drive.example/noordlicht/d15" },
+    { "doc_id": "d16", "path": "/Engineering/incident-2026-09.md", "title": "Incident report: September outage", "folder": "/Engineering", "allowed": ["eng-team"], "url": "https://drive.example/noordlicht/d16" },
+    { "doc_id": "d17", "path": "/Management/reorganisation-plan-2027.md", "title": "Reorganisation plan 2027", "folder": "/Management", "allowed": ["management"], "url": "https://drive.example/noordlicht/d17" },
+    { "doc_id": "d18", "path": "/Management/board-minutes-2026-09.md", "title": "Board minutes, September 2026", "folder": "/Management", "allowed": ["management"], "url": "https://drive.example/noordlicht/d18" },
+    { "doc_id": "d19", "path": "/HR/relocation-support.md", "title": "Relocation support", "folder": "/HR", "allowed": ["hr-team", "daan"], "url": "https://drive.example/noordlicht/d19" },
+    { "doc_id": "d20", "path": "/Engineering/architecture-overview.md", "title": "Architecture overview", "folder": "/Engineering", "allowed": ["eng-team"], "url": null }
+  ]
+}

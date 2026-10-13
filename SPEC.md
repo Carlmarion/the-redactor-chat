@@ -160,7 +160,7 @@ Bonus, only once the core is done: React demo page, passage-level redaction, "ex
 - [x] SPEC v1 + decision records 0001–0005
 - [x] Contract interpretation + decision records 0006–0008
 - [ ] Daily update #1
-- [ ] Sample data: documents, folders, users, groups, permission list, scripted events with traps
+- [x] Sample data with traps + eval set ([`data/sample/`](data/sample/))
 
 ### Wed 14
 - [ ] Project skeleton (TS, vitest, CLI)
