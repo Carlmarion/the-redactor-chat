@@ -21,10 +21,13 @@ question with its sources, and uses only the passages that person may open.
 | `status` | `doc_id` | `{ indexed_version, indexed_at }` |
 
 - `answer`: the best passage, verbatim, or a "not found in documents you can access" message.
-- `sources[]`: `{ doc_id, path, title, passage_id }` for every passage the answer is drawn from.
-- `indexed_version`: the `modified_at` of the last change applied to that document.
-- `indexed_at`: when that change became answerable (committed to the store).
-- Unknown `doc_id` → an explicit "not indexed" error.
+- `sources[]`: `{ doc_id, path, title, passage_id, snippet, url }` for every passage the answer is drawn from; `url` may be null.
+- `indexed_version`: the `modified_at` of the last state applied to that document.
+- `indexed_at`: when that state became answerable (committed to the store).
+- Extra `status` fields: `revision` (count of states indexed), `previous_path`.
+- Unknown or deleted `doc_id` → an explicit status.
+
+Every gap in the contracts and how we read it: [`docs/contract.md`](docs/contract.md).
 
 Exposed two ways, same behaviour:
 
@@ -38,7 +41,7 @@ GET  /status/:doc_id
 ### Data contract (inputs)
 
 - Document: `{ path, title, folder, allowed }` + its text.
-- Change event: `{ doc_id, path, modified_at, action: "update" }`.
+- Change event: `{ doc_id, path, modified_at, action }`. Any action may appear; access changes arrive on the same feed.
 - Permission list from IT: who may open which folder.
 - Feed: served live from a URL given at start (`redactor serve --feed-url <url>`).
 
@@ -69,7 +72,8 @@ Every input enters through a mapping layer, so the real format plugs in without 
 | Loader | Bootstrap: corpus + permission list → store. |
 | Chunker | Document text → passages of at most 500 tokens (model tokenizer). |
 | Indexer | Passages → embeddings + keyword index, in one transaction per document. |
-| Feed watcher | Long-running loop on the feed URL. Decides relabel vs re-index. |
+| Feed watcher | Long-running loop: polls the feed with a cursor (`FeedReader`), dispatches each event by type to its handler. |
+| Reconciler | Brings one document in line with its current state: relabel and/or re-index. |
 | Access resolver | `user_id` → principals (the user and their groups) → visible passages. |
 | Retriever | Question → at most 16 visible passages (vector + keyword, merged). |
 | Answerer | Passages → extract → answer + sources, or "not found". |
@@ -79,7 +83,7 @@ Every input enters through a mapping layer, so the real format plugs in without 
 
 | Table | Holds |
 |---|---|
-| `documents` | `doc_id`, `path`, `title`, `folder`, `content_hash`, `version` (modified_at), `indexed_at`, `deleted` |
+| `documents` | `doc_id`, `path`, `previous_path`, `title`, `folder`, `url`, `content_hash`, `version` (modified_at), `revision`, `indexed_at`, `deleted` |
 | `passages` | `passage_id`, `doc_id`, `ord`, `text`, `token_count` |
 | `passage_vec` | sqlite-vec table: `passage_id` → 384-dim embedding |
 | `passage_fts` | FTS5 table: `passage_id` → text |
@@ -107,13 +111,17 @@ An access change rewrites labels and costs nothing; only a text change re-embeds
 
 ### Change event
 
-1. Record the event.
-2. Skip duplicates and anything older than the document's current version.
-3. Coalesce: several pending events for one document → apply only the latest.
-4. Read the document's current text from the document source.
-5. Path changed → recompute access from the new folder (relabel).
-6. Text changed → re-chunk, re-embed, replace the passages (one transaction).
-7. Set `version = modified_at`, `indexed_at = now`.
+An event is a doorbell: it says something changed, not what. We reconcile, never replay.
+
+1. Poll `<feed>?since=<cursor>`, record each event.
+2. Dispatch by type. Document event → reconcile that document. Access event → reload the permission list and relabel affected documents. Unknown type → log, then reconcile the document if one is named.
+3. Skip duplicates and anything older than the document's current version.
+4. Coalesce: several pending events for one document → one reconciliation.
+5. Read the current state: path from the latest event, text from the document source.
+6. Folder changed → recompute access (relabel, €0).
+7. Text changed → re-chunk, re-embed, replace the passages (one transaction).
+8. Set `version = modified_at`, `revision += 1`, `previous_path`, `indexed_at = now`.
+9. Save the cursor.
 
 Old passages are replaced, never archived with their old access.
 
@@ -127,16 +135,18 @@ Old passages are replaced, never archived with their old access.
 
 ## 7. Assumptions (until the client answers)
 
-- A1. Effective access follows the document's current folder. `allowed` on a sample document is a snapshot of that.
+- A1. Access follows the document's closest parent folder with a rule; `allowed` is a snapshot, kept for audit. On doubt, hide (decision 0007).
 - A2. Entries in access lists may be users or groups.
 - A3. `user_id` arrives trusted; identity checks belong to the client's login system.
-- A4. The feed is polled every second; freshness target is seconds.
+- A4. The feed is polled every second; freshness target is seconds (decision 0008).
 - A5. Documents may be in several languages.
-- A6. A deleted document is signalled by a change whose text is no longer readable; it is removed from the store.
+- A6. A deleted document is signalled by a delete action or by text that is no longer readable; it is removed from the store.
+- A7. `doc_id` is stable across moves; documents can move between folders.
+- A8. Access changes (team membership, folder rules) arrive on the same feed as their own event type.
 
 ## 8. Out of scope
 
-- Revision history of documents.
+- Revision history of documents (old text is never kept with its old access; a safe history is a discussion point for later).
 - User authentication.
 - Multi-server deployment.
 
@@ -147,7 +157,8 @@ Bonus, only once the core is done: React demo page, passage-level redaction, "ex
 ### Tue 13
 - [x] Clarify the brief, glossary, open questions
 - [x] Stack decision
-- [ ] SPEC v1 + decision records 0001–0005
+- [x] SPEC v1 + decision records 0001–0005
+- [x] Contract interpretation + decision records 0006–0008
 - [ ] Daily update #1
 - [ ] Sample data: documents, folders, users, groups, permission list, scripted events with traps
 
