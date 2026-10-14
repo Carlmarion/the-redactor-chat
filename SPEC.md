@@ -163,9 +163,9 @@ Bonus, only once the core is done: React demo page, passage-level redaction, "ex
 - [x] Sample data with traps + eval set ([`data/sample/`](data/sample/))
 
 ### Wed 14
-- [ ] Project skeleton (TS, vitest, CLI)
-- [ ] Store schema + migrations
-- [ ] Spike: sqlite-vec KNN restricted to a set of passages
+- [x] Project skeleton (TS, vitest, CLI)
+- [x] Store schema + migrations
+- [x] Spike: sqlite-vec KNN restricted to a set of passages
 - [ ] Loader + mapping layer + chunker
 - [ ] Simulator embed + extract behind the adapter, limits + cost ledger
 - [ ] End-to-end ingest of sample data

@@ -19,3 +19,8 @@ one store, it gives a real vector-search interface, and it moves directly to pgv
 ## Open risk
 How sqlite-vec restricts a nearest-neighbour search to an allowed set of passages.
 Spike on day 2. Fallback: score only the visible passages in code.
+
+## Update 2026-10-14: risk resolved
+Spike `test/vec-filter.spike.test.ts`: a KNN query with `rowid IN (SELECT …)` applies the filter
+before taking the top k. A hidden passage that is the closest match is excluded, and k is filled
+from visible passages only. Access filtering stays inside the query; no fallback needed.
