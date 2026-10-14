@@ -27,8 +27,21 @@ export type EmbedMode = "realtime" | "batch";
 
 export interface Embedder {
   readonly dimensions: number;
-  countTokens(text: string): number;
+  countTokens(text: string, kind?: EmbedKind): number;
   embed(texts: string[], kind: EmbedKind, mode: EmbedMode): Promise<Float32Array[]>;
+}
+
+export interface CostEntry {
+  operation: "embed";
+  mode: EmbedMode;
+  requests: number;
+  tokens: number;
+  eur: number;
+}
+
+/** Where the adapter records what each simulator call would cost. */
+export interface CostLedger {
+  record(entry: CostEntry): void;
 }
 
 export interface ExtractResult {

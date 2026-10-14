@@ -1,7 +1,7 @@
 // The one store (decision 0002). Everything here is derived data: it can be rebuilt
 // from the corpus, the permission list and the feed.
 
-export const EMBEDDING_DIMENSIONS = 384;
+import { EMBEDDING_MODEL } from "../config.ts";
 
 export const SCHEMA_VERSION = 1;
 
@@ -30,7 +30,7 @@ CREATE TABLE passages (
 );
 
 -- rowid = passage_id
-CREATE VIRTUAL TABLE passage_vec USING vec0(embedding float[${EMBEDDING_DIMENSIONS}] distance_metric=cosine);
+CREATE VIRTUAL TABLE passage_vec USING vec0(embedding float[${EMBEDDING_MODEL.dimensions}] distance_metric=cosine);
 
 -- rowid = passage_id
 CREATE VIRTUAL TABLE passage_fts USING fts5(text, tokenize = 'unicode61 remove_diacritics 2');
