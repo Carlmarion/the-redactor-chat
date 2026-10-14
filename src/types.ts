@@ -26,7 +26,11 @@ export type StatusResult =
       indexed_at: string;
       revision: number;
       previous_path: string | null;
+      /** Feed delivery → answerable, in seconds. Null when the state came from the initial load. */
+      freshness_seconds: number | null;
     }
+  /** Indexed, but no readable text: a scan or an image-only file (C12). */
+  | { state: "not_searchable"; indexed_version: string; indexed_at: string; reason: "no_readable_text" }
   | { state: "deleted"; indexed_version: string; indexed_at: string }
   | { state: "not_indexed" };
 

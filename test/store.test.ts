@@ -40,12 +40,14 @@ describe("status", () => {
       `INSERT INTO documents (doc_id, path, previous_path, title, folder, version, revision, indexed_at)
        VALUES ('d1', '/HR/a.md', '/Public/a.md', 'A', '/HR', '2026-10-13T14:02:11+02:00', 4, '2026-10-13T14:02:12+02:00')`,
     ).run();
+    db.prepare("INSERT INTO passages (doc_id, ord, text, token_count) VALUES ('d1', 0, 'x', 1)").run();
     expect(status(db, "d1")).toEqual({
       state: "indexed",
       indexed_version: "2026-10-13T14:02:11+02:00",
       indexed_at: "2026-10-13T14:02:12+02:00",
       revision: 4,
       previous_path: "/Public/a.md",
+      freshness_seconds: null,
     });
   });
 

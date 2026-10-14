@@ -162,16 +162,16 @@ Bonus, only once the core is done: React demo page, passage-level redaction, "ex
 - [x] Stack decision
 - [x] SPEC v1 + decision records 0001–0005
 - [x] Contract interpretation + decision records 0006–0008
-- [ ] Daily update #1
+- [x] Daily update #1
 - [x] Sample data with traps + eval set ([`data/sample/`](data/sample/))
 
 ### Wed 14
 - [x] Project skeleton (TS, vitest, CLI)
 - [x] Store schema + migrations
 - [x] Spike: sqlite-vec KNN restricted to a set of passages
-- [ ] Loader + mapping layer + chunker
+- [x] Loader + mapping layer + chunker
 - [ ] Simulator embed + extract behind the adapter, limits + cost ledger
-- [ ] End-to-end ingest of sample data
+- [x] End-to-end ingest of sample data
 
 ### Thu 15
 - [ ] Access resolver + filter

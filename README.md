@@ -19,9 +19,9 @@ npm install
 Every command prints JSON. The store is a single file, `./redactor.db` by default (`--db <path>` to change it).
 
 ```sh
-./bin/redactor status <doc_id>               # which version of a document is indexed, and when
+./bin/redactor ingest [--data data/sample]    # load the corpus and permission list (first run downloads the model, ~145 MB)
+./bin/redactor status <doc_id>               # which version of a document is indexed, when, and how fresh
 ./bin/redactor ask <user_id> "<question>"    # (in progress)
-./bin/redactor ingest                        # (in progress)
 ./bin/redactor serve --feed-url <url>        # (in progress)
 ```
 

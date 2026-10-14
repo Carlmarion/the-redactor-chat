@@ -3,20 +3,23 @@
 
 import { EMBEDDING_MODEL } from "../config.ts";
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const SCHEMA = `
+-- folder = the governing folder: the closest parent folder with an access rule (decision 0007).
 CREATE TABLE documents (
   doc_id        TEXT PRIMARY KEY,
   path          TEXT NOT NULL,
   previous_path TEXT,
   title         TEXT NOT NULL,
-  folder        TEXT NOT NULL,
+  folder        TEXT,
   url           TEXT,
   content_hash  TEXT,
   version       TEXT NOT NULL,
   revision      INTEGER NOT NULL DEFAULT 0,
   indexed_at    TEXT,
+  -- First feed event behind the current state; null when it came from the initial load.
+  source_event_id INTEGER REFERENCES events(event_id),
   deleted       INTEGER NOT NULL DEFAULT 0
 );
 

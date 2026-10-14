@@ -1,7 +1,22 @@
 // Every external input enters through one of these interfaces (decision 0001).
 // Today each is backed by our own simulator and sample data; the client's systems plug in later.
 
-import type { DocId, FeedEvent, Passage, PermissionSnapshot } from "./types.ts";
+import type { DocId, FeedEvent, Passage, PermissionSnapshot, PrincipalId } from "./types.ts";
+
+/** One document as listed in the corpus export: `{path, title, folder, allowed}` plus our id (C1). */
+export interface CorpusEntry {
+  doc_id: DocId;
+  path: string;
+  title: string;
+  /** Kept for audit only: access follows the folder rules (C3). */
+  allowed: PrincipalId[];
+  url: string | null;
+}
+
+/** The corpus export: which documents exist, as of when. */
+export interface CorpusSource {
+  list(): Promise<{ exported_at: string; documents: CorpusEntry[] }>;
+}
 
 export interface SourceDocument {
   text: string;
