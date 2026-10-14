@@ -24,8 +24,9 @@ question with its sources, and uses only the passages that person may open.
 - `sources[]`: `{ doc_id, path, title, passage_id, snippet, url }` for every passage the answer is drawn from; `url` may be null.
 - `indexed_version`: the `modified_at` of the last state applied to that document.
 - `indexed_at`: when that state became answerable (committed to the store).
-- Extra `status` fields: `revision` (count of states indexed), `previous_path`.
-- Unknown or deleted `doc_id` → an explicit status.
+- Extra `status` fields: `revision` (count of states indexed), `previous_path`, `freshness_seconds`.
+- `freshness_seconds`: time from the feed delivering the change to it being answerable (`indexed_at` − `received_at` of the first event behind that state). Computed, not stored. `null` for states from the initial load.
+- Unknown or deleted `doc_id` → an explicit status. A document with no readable text (a scan, an image-only file) → `not_searchable`.
 
 Every gap in the contracts and how we read it: [`docs/contract.md`](docs/contract.md).
 
@@ -83,7 +84,7 @@ Every input enters through a mapping layer, so the real format plugs in without 
 
 | Table | Holds |
 |---|---|
-| `documents` | `doc_id`, `path`, `previous_path`, `title`, `folder`, `url`, `content_hash`, `version` (modified_at), `revision`, `indexed_at`, `deleted` |
+| `documents` | `doc_id`, `path`, `previous_path`, `title`, `folder`, `url`, `content_hash`, `version` (modified_at), `revision`, `indexed_at`, `source_event_id` (first event behind this state; null = initial load), `deleted` |
 | `passages` | `passage_id`, `doc_id`, `ord`, `text`, `token_count` |
 | `passage_vec` | sqlite-vec table: `passage_id` → 384-dim embedding |
 | `passage_fts` | FTS5 table: `passage_id` → text |
@@ -120,7 +121,7 @@ An event is a doorbell: it says something changed, not what. We reconcile, never
 5. Read the current state: path from the latest event, text from the document source.
 6. Folder changed → recompute access (relabel, €0).
 7. Text changed → re-chunk, re-embed, replace the passages (one transaction).
-8. Set `version = modified_at`, `revision += 1`, `previous_path`, `indexed_at = now`.
+8. Set `version = modified_at`, `revision += 1`, `previous_path`, `indexed_at = now`, `source_event_id` = first event of the batch.
 9. Save the cursor.
 
 Old passages are replaced, never archived with their old access.
@@ -143,9 +144,11 @@ Old passages are replaced, never archived with their old access.
 - A6. A deleted document is signalled by a delete action or by text that is no longer readable; it is removed from the store.
 - A7. `doc_id` is stable across moves; documents can move between folders.
 - A8. Access changes (team membership, folder rules) arrive on the same feed as their own event type.
+- A9. The system reads text. Image alt text and captions count as text. A document with no readable text (a scan, an image-only file) is recorded as `not_searchable`, never silently dropped.
 
 ## 8. Out of scope
 
+- Reading text inside images (OCR) and describing images with a model.
 - Revision history of documents (old text is never kept with its old access; a safe history is a discussion point for later).
 - User authentication.
 - Multi-server deployment.
