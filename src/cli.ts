@@ -12,14 +12,14 @@ import { status } from "./status.ts";
 const USAGE = `redactor <command> [options]
 
 Commands:
-  ask <user_id> "<question>"   Answer a question with sources, using only what that user may open
-  status <doc_id>              Show which version of a document is indexed, and when
-  ingest                       Load the corpus and permission list into an empty store
-  serve --feed-url <url>       Follow the change feed and keep the store fresh
+  ask <user_id> "<question>"     Answer a question with sources, using only what that user may open
+  status <doc_id> [--user <id>]  Show which version of a document is indexed, and when
+  ingest                         Load the corpus and permission list into an empty store
+  serve --feed-url <url>         Follow the change feed and keep the store fresh
 
 Options:
-  --db <path>                  Store file (default: ./redactor.db)
-  --data <dir>                 Corpus and permission list for ingest (default: ./data/sample)
+  --db <path>                    Store file (default: ./redactor.db)
+  --data <dir>                   Corpus and permission list for ingest (default: ./data/sample)
 `;
 
 async function main(argv: string[]): Promise<number> {
@@ -30,6 +30,7 @@ async function main(argv: string[]): Promise<number> {
       db: { type: "string", default: "./redactor.db" },
       data: { type: "string", default: "./data/sample" },
       "feed-url": { type: "string" },
+      user: { type: "string" },
       help: { type: "boolean", short: "h" },
     },
   });
@@ -44,7 +45,7 @@ async function main(argv: string[]): Promise<number> {
     case "status": {
       const [docId] = rest;
       if (!docId) return fail("status needs a doc_id");
-      print(status(openDb(values.db), docId));
+      print(status(openDb(values.db), docId, values.user));
       return 0;
     }
     case "ingest": {
