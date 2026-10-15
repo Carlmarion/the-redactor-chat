@@ -177,8 +177,8 @@ Bonus, only once the core is done: React demo page, passage-level redaction, "ex
 - [x] End-to-end ingest of sample data
 
 ### Thu 15
-- [ ] Access resolver + filter (Carl)
-- [ ] `status` with optional `user_id`, reusing the resolver
+- [x] Access resolver + filter (Carl)
+- [x] `status` with optional `user_id`, reusing the resolver
 - [ ] Leak tests (move, group removal, unknown user)
 
 ### Fri 16

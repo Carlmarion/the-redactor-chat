@@ -1,5 +1,6 @@
+import { mayOpenDocument } from "./access/visible-passages.ts";
 import type { Db } from "./store/db.ts";
-import type { DocId, StatusResult } from "./types.ts";
+import type { DocId, StatusResult, UserId } from "./types.ts";
 
 interface DocumentRow {
   version: string;
@@ -10,7 +11,14 @@ interface DocumentRow {
   received_at: string | null;
 }
 
-export function status(db: Db, docId: DocId): StatusResult {
+const NOT_INDEXED: StatusResult = { state: "not_indexed", indexed_version: null, indexed_at: null };
+
+/**
+ * Without a user: the operator's view. With a user: a document they may not open answers
+ * exactly like one that does not exist, so status cannot be used to probe for hidden documents.
+ */
+export function status(db: Db, docId: DocId, userId?: UserId): StatusResult {
+  if (userId !== undefined && !mayOpenDocument(db, docId, userId)) return NOT_INDEXED;
   const row = db
     .prepare(
       `SELECT d.version, d.indexed_at, d.revision, d.deleted,
@@ -21,7 +29,7 @@ export function status(db: Db, docId: DocId): StatusResult {
     )
     .get(docId) as DocumentRow | undefined;
 
-  if (!row || row.indexed_at === null) return { state: "not_indexed", indexed_version: null, indexed_at: null };
+  if (!row || row.indexed_at === null) return NOT_INDEXED;
   const stamp = { indexed_version: row.version, indexed_at: row.indexed_at };
   if (row.deleted) return { state: "deleted", ...stamp };
   if (row.passages === 0) return { state: "not_searchable", ...stamp, reason: "no_readable_text" };
