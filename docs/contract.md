@@ -24,14 +24,13 @@ Open questions to the client are tracked in the daily updates.
 |---|---|---|---|
 | C9 | `sources[]` | Shape undefined | `{ doc_id, path, title, passage_id, snippet, url }`, with `url` nullable |
 | C10 | `answer` | No-answer case, unknown user | Explicit messages: "not found in documents you can access". Unknown user sees nothing |
-| C11 | `status(doc_id) -> {indexed_version, indexed_at}` | Type of version; unknown or deleted doc | `indexed_version` = `modified_at` of the last state applied (comparable with the feed). Extra fields: `revision` (count of states indexed), `previous_path`, `freshness_seconds` (feed delivery → answerable, computed; null after the initial load). Unknown or deleted doc → explicit status |
+| C11 | `status(doc_id) -> {indexed_version, indexed_at}` | Type of version; unknown or deleted doc | `indexed_version` = `modified_at` of the last state applied (comparable with the feed). Extra fields: `revision` (count of states indexed), `freshness_seconds` (feed delivery → answerable, computed; null after the initial load). `indexed_version` and `indexed_at` are always present, `null` when never indexed. **No path or title**: `status` takes no user, so it must not reveal where a document lives. With an optional `user_id`, a document that user cannot open answers exactly like an unknown one |
 
 ```json
 {
   "indexed_version": "2026-10-13T14:02:11+02:00",
-  "indexed_at": "2026-10-13T14:02:12.204+02:00",
+  "indexed_at": "2026-10-13T14:02:13.404+02:00",
   "revision": 4,
-  "previous_path": "/Public/salary-bands.md",
   "freshness_seconds": 1.2
 }
 ```

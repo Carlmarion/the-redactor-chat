@@ -4,6 +4,7 @@
 
 import { createHash } from "node:crypto";
 import { labelDocument } from "../access/doc-access.ts";
+import { amsterdamIso } from "../time.ts";
 import type { EmbedMode, Embedder } from "../ports.ts";
 import type { Db } from "../store/db.ts";
 import type { DocId } from "../types.ts";
@@ -64,7 +65,7 @@ export class Indexer {
       url: state.url,
       content_hash: createHash("sha256").update(state.text).digest("hex"),
       version: state.version,
-      indexed_at: new Date().toISOString(),
+      indexed_at: amsterdamIso(),
       source_event_id: state.source_event_id,
     });
 

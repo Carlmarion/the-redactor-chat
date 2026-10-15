@@ -24,7 +24,8 @@ question with its sources, and uses only the passages that person may open.
 - `sources[]`: `{ doc_id, path, title, passage_id, snippet, url }` for every passage the answer is drawn from; `url` may be null.
 - `indexed_version`: the `modified_at` of the last state applied to that document.
 - `indexed_at`: when that state became answerable (committed to the store).
-- Extra `status` fields: `revision` (count of states indexed), `previous_path`, `freshness_seconds`.
+- Extra `status` fields: `revision` (count of states indexed), `freshness_seconds`. `indexed_version` and `indexed_at` are always present (`null` when never indexed).
+- `status` reveals no path or title. An optional `user_id` makes a document that user cannot open answer exactly like an unknown one.
 - `freshness_seconds`: time from the feed delivering the change to it being answerable (`indexed_at` − `received_at` of the first event behind that state). Computed, not stored. `null` for states from the initial load.
 - Unknown or deleted `doc_id` → an explicit status. A document with no readable text (a scan, an image-only file) → `not_searchable`.
 
@@ -145,6 +146,8 @@ Old passages are replaced, never archived with their old access.
 - A7. `doc_id` is stable across moves; documents can move between folders.
 - A8. Access changes (team membership, folder rules) arrive on the same feed as their own event type.
 - A9. The system reads text. Image alt text and captions count as text. A document with no readable text (a scan, an image-only file) is recorded as `not_searchable`, never silently dropped.
+- A10. Access only ever grants: there is no "deny" list. If one appears, deny always wins.
+- A11. Timestamps we write are Amsterdam time with offset; `modified_at` from the feed is kept verbatim.
 
 ## 8. Out of scope
 
@@ -174,7 +177,8 @@ Bonus, only once the core is done: React demo page, passage-level redaction, "ex
 - [x] End-to-end ingest of sample data
 
 ### Thu 15
-- [ ] Access resolver + filter
+- [ ] Access resolver + filter (Carl)
+- [ ] `status` with optional `user_id`, reusing the resolver
 - [ ] Leak tests (move, group removal, unknown user)
 
 ### Fri 16
