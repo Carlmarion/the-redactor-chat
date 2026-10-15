@@ -1,5 +1,5 @@
 // Query-time access filter: who is asking → what they may read.
-// Written by Carl (AGENTS.md). Everything the retriever searches goes through visiblePassageIds,
+// Hand-written by the engineer, syntax fixes with the assistant (AGENTS.md). Everything the retriever searches goes through visiblePassageIds,
 // so if this file is right, a leak is impossible by construction.
 import type { Db } from "../store/db.ts";
 import type { DocId, PrincipalId, UserId } from "../types.ts";

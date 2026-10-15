@@ -1,13 +1,13 @@
 # Working on this repository
 
-This project is built by one engineer (Carl) with an AI coding assistant. These are the rules
+This project is built by one engineer with an AI coding assistant. These are the rules
 both follow. Any agent working here follows them too.
 
 ## Who decides
 
-- Carl decides. The assistant proposes, builds and explains; it never merges.
-- Carl reviews every pull request, runs the tests and the demo.
-- The query-time access filter (user → principals → visible passages) is written by Carl himself.
+- The engineer decides. The assistant proposes, builds and explains; it never merges.
+- The engineer reviews every pull request, runs the tests and the demo.
+- The query-time access filter (user → principals → visible passages) is hand-written by the engineer, with syntax help from the assistant.
   It is the heart of "nobody may see what they shouldn't", so it is not delegated.
 - When the assistant is wrong, it says so and the correction is recorded (decision records,
   their dated updates, and the contract page).

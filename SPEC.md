@@ -177,12 +177,12 @@ Bonus, only once the core is done: React demo page, passage-level redaction, "ex
 - [x] End-to-end ingest of sample data
 
 ### Thu 15
-- [x] Access resolver + filter (Carl)
+- [x] Access resolver + filter (hand-written by the engineer)
 - [x] `status` with optional `user_id`, reusing the resolver
 - [ ] Leak tests (move, group removal, unknown user)
 
 ### Fri 16
-- [ ] Retriever (hybrid) + answerer + `ask`
+- [x] Retriever (hybrid) + answerer + `ask`
 - [ ] Feed simulator (HTTP, scripted, `at`)
 - [ ] Feed watcher + `status`
 - [ ] Freshness tests driven by `at`
