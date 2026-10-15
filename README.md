@@ -2,7 +2,7 @@
 
 A living knowledge base: staff ask questions and get answers with sources, from documents that change every day, using only what each person may open.
 
-> Work in progress. Design: [`SPEC.md`](SPEC.md) · decisions: [`docs/decisions/`](docs/decisions/) · contract reading: [`docs/contract.md`](docs/contract.md).
+> Work in progress. Design: [`SPEC.md`](SPEC.md) · decisions: [`docs/decisions/`](docs/decisions/) · contract reading: [`docs/contract.md`](docs/contract.md) · limits found and next steps: [`docs/next-steps.md`](docs/next-steps.md).
 
 ## Requirements
 

@@ -32,7 +32,7 @@ E11 ("relocation allowance", asked by someone who may not open the relocation do
 with the visible welcome document instead of "not found". It is off topic, never a leak: the
 hidden document cannot appear. The shared word is "get", which our 23-passage sample is too small
 to recognise as common. We do not tune further on 13 questions: that would be learning our own
-test by heart.
+test by heart. What would go further: [`../next-steps.md`](../next-steps.md).
 
 ## The four questions
 1. **Why here?** The policy sits in our code, after the simulator's extract, so the same rule
