@@ -1,9 +1,12 @@
 // The judge's door, command-line side. Every command prints JSON on stdout.
 import { parseArgs } from "node:util";
+import { ask } from "./ask.ts";
+import { ANSWER_MIN_SCORE } from "./config.ts";
 import { Indexer } from "./ingest/indexer.ts";
 import { loadCorpus } from "./ingest/load.ts";
 import { MeteredEmbedder } from "./simulator/metered-embedder.ts";
 import { LocalEmbedder } from "./simulator/local-embedder.ts";
+import { LocalExtractor } from "./simulator/local-extractor.ts";
 import { SampleData } from "./sources/sample-data.ts";
 import { SqliteCostLedger } from "./store/cost-ledger.ts";
 import { openDb, type Db } from "./store/db.ts";
@@ -52,7 +55,15 @@ async function main(argv: string[]): Promise<number> {
       print(await ingest(openDb(values.db), values.data));
       return 0;
     }
-    case "ask":
+    case "ask": {
+      const [userId, question] = rest;
+      if (!userId || !question) return fail('ask needs a user_id and a "question"');
+      const db = openDb(values.db);
+      const model = await LocalEmbedder.load();
+      const embedder = new MeteredEmbedder(model, new SqliteCostLedger(db));
+      print(await ask({ db, embedder, extractor: new LocalExtractor(model, ANSWER_MIN_SCORE) }, userId, question));
+      return 0;
+    }
     case "serve":
       return fail(`${command} is not implemented yet`);
     default:
