@@ -64,7 +64,7 @@ export interface ExtractResult {
   score: number;
 }
 
-/** Returns the best passage for a question, or null when none answers it. At most 16 passages. */
+/** Returns the best passage for a question and its score; null only when given none. At most 16 passages. */
 export interface Extractor {
   extract(question: string, passages: Passage[]): Promise<ExtractResult | null>;
 }

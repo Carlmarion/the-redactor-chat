@@ -2,6 +2,7 @@
 // Who the user acts as → which passages they may read → search only those → best passage.
 
 import { principalsOf, visiblePassageIds } from "./access/visible-passages.ts";
+import { shouldAnswer, type AnswerPolicy } from "./answer-policy.ts";
 import type { Embedder, Extractor } from "./ports.ts";
 import { retrieve } from "./retrieval/retriever.ts";
 import { EXTRACT } from "./simulator/limits.ts";
@@ -17,22 +18,43 @@ export interface AskDeps {
   db: Db;
   embedder: Embedder;
   extractor: Extractor;
+  policy: AnswerPolicy;
 }
 
-export async function ask({ db, embedder, extractor }: AskDeps, userId: UserId, question: string): Promise<AskResult> {
-  if (principalsOf(db, userId).length === 0) return { answer: UNKNOWN_USER, sources: [] };
+/** What the answer was based on: for evals and calibration, never shown to staff. */
+export interface AskTrace {
+  score: number | null;
+  sharesKeyword: boolean;
+}
+
+export async function ask(deps: AskDeps, userId: UserId, question: string): Promise<AskResult> {
+  return (await askTraced(deps, userId, question)).result;
+}
+
+export async function askTraced(
+  { db, embedder, extractor, policy }: AskDeps,
+  userId: UserId,
+  question: string,
+): Promise<{ result: AskResult; trace: AskTrace }> {
+  const none = (answer: string, trace: AskTrace = { score: null, sharesKeyword: false }) => ({
+    result: { answer, sources: [] },
+    trace,
+  });
+  if (principalsOf(db, userId).length === 0) return none(UNKNOWN_USER);
 
   const visible = visiblePassageIds(db, userId);
-  if (visible.length === 0) return { answer: NOT_FOUND, sources: [] };
+  if (visible.length === 0) return none(NOT_FOUND);
 
   const [vector] = await embedder.embed([question], "query", "realtime");
   if (!vector) throw new Error("the embedder returned no vector for the question");
 
-  const candidates = retrieve(db, { text: question, vector, visible, limit: EXTRACT.maxPassages });
-  const best = await extractor.extract(question, candidates);
-  if (!best) return { answer: NOT_FOUND, sources: [] };
+  const { passages, keywordHits } = retrieve(db, { text: question, vector, visible, limit: EXTRACT.maxPassages });
+  const best = await extractor.extract(question, passages);
+  if (!best) return none(NOT_FOUND);
 
-  return { answer: best.passage.text, sources: [toSource(db, best.passage)] };
+  const trace = { score: best.score, sharesKeyword: keywordHits.has(best.passage.passage_id) };
+  if (!shouldAnswer(trace.score, trace.sharesKeyword, policy)) return none(NOT_FOUND, trace);
+  return { result: { answer: best.passage.text, sources: [toSource(db, best.passage)] }, trace };
 }
 
 function toSource(db: Db, passage: Passage): Source {

@@ -1,17 +1,13 @@
 // The simulator's extract mode: takes a question and at most 16 passages, returns the best passage
-// and its score, or null when none is close enough. Runs the embedding model internally; extract
-// has no price in the brief, so nothing is metered here.
+// and its score. Whether that passage is good enough is our decision (answer-policy.ts), not the
+// simulator's. Runs the embedding model internally; extract has no price in the brief.
 
 import type { Embedder, ExtractResult, Extractor } from "../ports.ts";
 import type { Passage } from "../types.ts";
 import { EXTRACT } from "./limits.ts";
 
 export class LocalExtractor implements Extractor {
-  constructor(
-    private readonly model: Embedder,
-    /** Below this similarity, no passage answers the question. Calibrated on the eval set. */
-    private readonly minScore: number,
-  ) {}
+  constructor(private readonly model: Embedder) {}
 
   async extract(question: string, passages: Passage[]): Promise<ExtractResult | null> {
     if (passages.length > EXTRACT.maxPassages) {
@@ -30,7 +26,7 @@ export class LocalExtractor implements Extractor {
       const score = cosine(q, v);
       if (!best || score > best.score) best = { passage, score };
     }
-    return best && best.score >= this.minScore ? best : null;
+    return best;
   }
 }
 

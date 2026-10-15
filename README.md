@@ -20,7 +20,8 @@ Every command prints JSON. The store is a single file, `./redactor.db` by defaul
 
 ```sh
 ./bin/redactor ingest [--data data/sample]    # load the corpus and permission list (first run downloads the model, ~145 MB)
-./bin/redactor status <doc_id> [--user <id>] # which version is indexed, when, how fresh; with --user, hidden docs look unknown
+./bin/redactor status <doc_id>... [--user <id>]  # which version is indexed, when, how fresh; several ids at once; with --user, hidden docs look unknown
+./bin/redactor eval [--passage-tokens 500,250]   # run the eval set on a fresh in-memory store (never touches --db); exit 2 on any leak
 ./bin/redactor ask <user_id> "<question>"    # answer with sources, from what that user may open (~3 s: loads the model)
 ./bin/redactor serve --feed-url <url>        # (in progress)
 ```

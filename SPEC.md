@@ -18,7 +18,7 @@ question with its sources, and uses only the passages that person may open.
 | Call | Input | Output |
 |---|---|---|
 | `ask` | `user_id`, `question` | `{ answer, sources[] }` |
-| `status` | `doc_id` | `{ indexed_version, indexed_at }` |
+| `status` | `doc_id` (one or more) | `{ indexed_version, indexed_at }` (one per id) |
 
 - `answer`: the best passage, verbatim, or a "not found in documents you can access" message.
 - `sources[]`: `{ doc_id, path, title, passage_id, snippet, url }` for every passage the answer is drawn from; `url` may be null.
@@ -72,7 +72,7 @@ Every input enters through a mapping layer, so the real format plugs in without 
 | Simulator | Our implementation of embed (local multilingual model), extract (scoring), feed (HTTP replay). |
 | Document source | Where text is read from: corpus directory now, real source later. |
 | Loader | Bootstrap: corpus + permission list → store. |
-| Chunker | Document text → passages of at most 500 tokens (model tokenizer). |
+| Chunker | Document text → passages of at most 250 tokens (model tokenizer; the brief caps them at 500, decision 0009). |
 | Indexer | Passages → embeddings + keyword index, in one transaction per document. |
 | Feed watcher | Long-running loop: polls the feed with a cursor (`FeedReader`), dispatches each event by type to its handler. |
 | Reconciler | Brings one document in line with its current state: relabel and/or re-index. |
@@ -106,9 +106,9 @@ An access change rewrites labels and costs nothing; only a text change re-embeds
 
 1. Resolve `user_id` → principals. Unknown user → sees nothing.
 2. Restrict to passages whose document grants one of those principals. **Filter before ranking.**
-3. Rank visible passages: vector similarity + keyword match, merged.
+3. Rank visible passages: vector similarity + keyword match (words found in more than a quarter of passages are ignored), merged.
 4. Keep the top 16 at most.
-5. Extract → best passage + source. Below the confidence threshold → "not found in documents you can access".
+5. Extract → best passage + its similarity. It is the answer if the similarity is high, or medium and the passage shares a meaningful word with the question; otherwise "not found in documents you can access" (decision 0009).
 6. Return `{ answer, sources }`.
 
 ### Change event
@@ -156,7 +156,7 @@ Old passages are replaced, never archived with their old access.
 - User authentication.
 - Multi-server deployment.
 
-Bonus, only once the core is done: React demo page, passage-level redaction, "explain" mode through a model S/M/L.
+Bonus, only once the core is done: React demo page, passage-level redaction, "explain" mode through a model S/M/L, `docs --user <id>` (the documents a user may open, through the access filter).
 
 ## 9. Tasks
 
@@ -179,7 +179,9 @@ Bonus, only once the core is done: React demo page, passage-level redaction, "ex
 ### Thu 15
 - [x] Access resolver + filter (hand-written by the engineer)
 - [x] `status` with optional `user_id`, reusing the resolver
-- [ ] Leak tests (move, group removal, unknown user)
+- [x] Leak tests (group removal, unknown user; moves come with the feed)
+- [x] Eval runner + calibration (decision 0009)
+- [x] `status` takes several doc ids
 
 ### Fri 16
 - [x] Retriever (hybrid) + answerer + `ask`

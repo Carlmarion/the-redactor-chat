@@ -4,6 +4,8 @@
 
 import { createHash } from "node:crypto";
 import { labelDocument } from "../access/doc-access.ts";
+import { PASSAGE_TOKENS } from "../config.ts";
+import { PASSAGE_MAX_TOKENS } from "../simulator/limits.ts";
 import { amsterdamIso } from "../time.ts";
 import type { EmbedMode, Embedder } from "../ports.ts";
 import type { Db } from "../store/db.ts";
@@ -33,11 +35,14 @@ export class Indexer {
     private readonly db: Db,
     private readonly embedder: Embedder,
     private readonly mode: EmbedMode,
-  ) {}
+    private readonly passageTokens: number = PASSAGE_TOKENS,
+  ) {
+    if (passageTokens > PASSAGE_MAX_TOKENS) throw new Error(`passages are capped at ${PASSAGE_MAX_TOKENS} tokens`);
+  }
 
   async index(state: DocumentState): Promise<IndexOutcome> {
     const plain = toPlainText(state.text);
-    const passages = hasReadableText(plain) ? chunk(plain, (t) => this.embedder.countTokens(t, "passage")) : [];
+    const passages = hasReadableText(plain) ? chunk(plain, (t) => this.embedder.countTokens(t, "passage"), this.passageTokens) : [];
     const vectors = await this.embedder.embed(passages, "passage", this.mode);
     this.db.transaction(() => this.write(state, passages, vectors))();
     return { passages: passages.length, searchable: passages.length > 0 };
