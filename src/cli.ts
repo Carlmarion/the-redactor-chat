@@ -1,0 +1,60 @@
+// The judge's door, command-line side. Every command prints JSON on stdout.
+import { parseArgs } from "node:util";
+import { openDb } from "./store/db.ts";
+import { status } from "./status.ts";
+
+const USAGE = `redactor <command> [options]
+
+Commands:
+  ask <user_id> "<question>"   Answer a question with sources, using only what that user may open
+  status <doc_id>              Show which version of a document is indexed, and when
+  ingest                       Load the corpus and permission list into an empty store
+  serve --feed-url <url>       Follow the change feed and keep the store fresh
+
+Options:
+  --db <path>                  Store file (default: ./redactor.db)
+`;
+
+function main(argv: string[]): number {
+  const { values, positionals } = parseArgs({
+    args: argv,
+    allowPositionals: true,
+    options: {
+      db: { type: "string", default: "./redactor.db" },
+      "feed-url": { type: "string" },
+      help: { type: "boolean", short: "h" },
+    },
+  });
+  const [command, ...rest] = positionals;
+
+  if (values.help || !command) {
+    process.stdout.write(USAGE);
+    return command || values.help ? 0 : 1;
+  }
+
+  switch (command) {
+    case "status": {
+      const [docId] = rest;
+      if (!docId) return fail("status needs a doc_id");
+      print(status(openDb(values.db), docId));
+      return 0;
+    }
+    case "ask":
+    case "ingest":
+    case "serve":
+      return fail(`${command} is not implemented yet`);
+    default:
+      return fail(`unknown command "${command}"\n\n${USAGE}`);
+  }
+}
+
+function print(value: unknown): void {
+  process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
+}
+
+function fail(message: string): number {
+  process.stderr.write(`redactor: ${message}\n`);
+  return 1;
+}
+
+process.exitCode = main(process.argv.slice(2));
