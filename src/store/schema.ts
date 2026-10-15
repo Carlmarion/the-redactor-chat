@@ -4,7 +4,7 @@
 
 import { EMBEDDING_MODEL } from "../config.ts";
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export const SCHEMA = `
 -- folder = the governing folder: the closest parent folder with an access rule (decision 0007).
@@ -38,6 +38,9 @@ CREATE VIRTUAL TABLE passage_vec USING vec0(embedding float[${EMBEDDING_MODEL.di
 
 -- rowid = passage_id
 CREATE VIRTUAL TABLE passage_fts USING fts5(text, tokenize = 'unicode61 remove_diacritics 2');
+
+-- How many passages contain each word: lets the retriever ignore words too common to mean anything.
+CREATE VIRTUAL TABLE passage_vocab USING fts5vocab(passage_fts, 'row');
 
 CREATE TABLE principals (
   principal_id TEXT PRIMARY KEY,

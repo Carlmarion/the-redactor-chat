@@ -3,7 +3,7 @@ import { visiblePassageIds } from "../src/access/visible-passages.ts";
 import { ask, NOT_FOUND, UNKNOWN_USER } from "../src/ask.ts";
 import { Indexer } from "../src/ingest/indexer.ts";
 import { loadCorpus } from "../src/ingest/load.ts";
-import { fuse, keywordQuery, retrieve } from "../src/retrieval/retriever.ts";
+import { fuse, informativeWords, keywordQuery, questionWords, retrieve } from "../src/retrieval/retriever.ts";
 import { LocalExtractor } from "../src/simulator/local-extractor.ts";
 import { SampleData } from "../src/sources/sample-data.ts";
 import { openDb, type Db } from "../src/store/db.ts";
@@ -22,7 +22,7 @@ beforeAll(async () => {
 async function search(userId: string, text: string): Promise<Passage[]> {
   const [vector] = await embedder.embed([text]);
   if (!vector) throw new Error("no vector");
-  return retrieve(db, { text, vector, visible: visiblePassageIds(db, userId), limit: 16 });
+  return retrieve(db, { text, vector, visible: visiblePassageIds(db, userId), limit: 16 }).passages;
 }
 
 describe("fuse", () => {
@@ -32,10 +32,18 @@ describe("fuse", () => {
   });
 });
 
-describe("keywordQuery", () => {
-  it("quotes every word so punctuation in a question cannot break the search syntax", () => {
-    expect(keywordQuery('bonus "scheme" OR NOT?')).toBe('"bonus" OR "scheme" OR "OR" OR "NOT"');
-    expect(keywordQuery("?!")).toBeNull();
+describe("keyword words", () => {
+  it("normalises the question like the index does", () => {
+    expect(questionWords('Café "bonus" OR bonus?')).toEqual(["cafe", "bonus", "or"]);
+  });
+
+  it("quotes every word so search syntax in a question stays inert", () => {
+    expect(keywordQuery(["bonus", "or", "not"])).toBe('"bonus" OR "or" OR "not"');
+    expect(keywordQuery([])).toBeNull();
+  });
+
+  it("drops words too common in the corpus to point at a passage", () => {
+    expect(informativeWords(db, ["the", "relocation", "zzzunknown"])).toEqual(["relocation"]);
   });
 });
 
@@ -61,18 +69,19 @@ describe("LocalExtractor", () => {
 
   it("refuses more than 16 passages, like the simulator", async () => {
     const many = Array.from({ length: 17 }, (_, i) => passage(i, "x"));
-    await expect(new LocalExtractor(embedder, 0).extract("q", many)).rejects.toThrow(/at most 16/);
+    await expect(new LocalExtractor(embedder).extract("q", many)).rejects.toThrow(/at most 16/);
   });
 
-  it("returns the closest passage, or null under the threshold", async () => {
+  it("returns the closest passage with its score", async () => {
     const passages = [passage(1, "bike lease scheme"), passage(2, "office closes at seven")];
-    expect((await new LocalExtractor(embedder, 0).extract("when does the office close", passages))?.passage.passage_id).toBe(2);
-    expect(await new LocalExtractor(embedder, 0.99).extract("when does the office close", passages)).toBeNull();
+    const best = await new LocalExtractor(embedder).extract("when does the office close", passages);
+    expect(best?.passage.passage_id).toBe(2);
+    expect(best?.score).toBeGreaterThan(0);
   });
 });
 
 describe("ask", () => {
-  const deps = () => ({ db, embedder, extractor: new LocalExtractor(embedder, 0) });
+  const deps = (policy = { high: 0, low: 0 }) => ({ db, embedder, extractor: new LocalExtractor(embedder), policy });
 
   it("answers with the passage and its source", async () => {
     const result = await ask(deps(), "sanne", "bonus scheme");
@@ -85,7 +94,6 @@ describe("ask", () => {
   });
 
   it("says not found when nothing visible answers", async () => {
-    const strict = { db, embedder, extractor: new LocalExtractor(embedder, 0.99) };
-    expect(await ask(strict, "emma", "bonus scheme")).toEqual({ answer: NOT_FOUND, sources: [] });
+    expect(await ask(deps({ high: 0.99, low: 0.99 }), "emma", "bonus scheme")).toEqual({ answer: NOT_FOUND, sources: [] });
   });
 });

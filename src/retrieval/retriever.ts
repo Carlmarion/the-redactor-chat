@@ -7,6 +7,12 @@ import type { Passage } from "../types.ts";
 /** Reciprocal rank fusion constant: dampens the weight of the very first ranks. Standard value. */
 const RRF_K = 60;
 
+/**
+ * A word found in more than this share of passages ("the", "what", "de") says nothing about
+ * which passage answers. Measured on the corpus itself, so it works in any language, no word list.
+ */
+const COMMON_WORD_SHARE = 0.25;
+
 export interface RetrievalQuery {
   text: string;
   vector: Float32Array;
@@ -15,8 +21,15 @@ export interface RetrievalQuery {
   limit: number;
 }
 
-export function retrieve(db: Db, query: RetrievalQuery): Passage[] {
-  if (query.visible.length === 0) return [];
+export interface Retrieved {
+  /** Best first, at most `limit`. */
+  passages: Passage[];
+  /** Passages the keyword search found: a second, independent signal for the answer policy. */
+  keywordHits: Set<number>;
+}
+
+export function retrieve(db: Db, query: RetrievalQuery): Retrieved {
+  if (query.visible.length === 0) return { passages: [], keywordHits: new Set() };
   const visible = JSON.stringify(query.visible);
 
   const byMeaning = db
@@ -29,7 +42,7 @@ export function retrieve(db: Db, query: RetrievalQuery): Passage[] {
     .pluck()
     .all(query.vector, query.limit, visible) as number[];
 
-  const match = keywordQuery(query.text);
+  const match = keywordQuery(informativeWords(db, questionWords(query.text)));
   const byKeywords = match
     ? (db
         .prepare(
@@ -43,12 +56,27 @@ export function retrieve(db: Db, query: RetrievalQuery): Passage[] {
     : [];
 
   const ids = fuse([byMeaning, byKeywords]).slice(0, query.limit);
-  return loadPassages(db, ids);
+  return { passages: loadPassages(db, ids), keywordHits: new Set(byKeywords) };
 }
 
-/** Each word of the question as a quoted FTS5 term, any of them may match. Null when there are none. */
-export function keywordQuery(text: string): string | null {
-  const words = text.match(/[\p{L}\p{N}]{2,}/gu) ?? [];
+/** The question's words as the keyword index stores them: lower case, accents removed, once each. */
+export function questionWords(text: string): string[] {
+  const words = text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().match(/[\p{L}\p{N}]{2,}/gu) ?? [];
+  return [...new Set(words)];
+}
+
+/** Keeps the words that occur in the corpus but not in too many passages. */
+export function informativeWords(db: Db, words: string[]): string[] {
+  if (words.length === 0) return [];
+  const total = db.prepare("SELECT count(*) FROM passages").pluck().get() as number;
+  const counts = db
+    .prepare("SELECT term, doc FROM passage_vocab WHERE term IN (SELECT value FROM json_each(?))")
+    .all(JSON.stringify(words)) as { term: string; doc: number }[];
+  return counts.filter((c) => c.doc <= Math.max(1, total * COMMON_WORD_SHARE)).map((c) => c.term);
+}
+
+/** Each word as a quoted FTS5 term, any of them may match. Quoting keeps "OR", "NOT" or quotes inert. */
+export function keywordQuery(words: string[]): string | null {
   return words.length ? words.map((w) => `"${w}"`).join(" OR ") : null;
 }
 
