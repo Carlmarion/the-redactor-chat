@@ -31,10 +31,10 @@ describe("store", () => {
 
 describe("status", () => {
   it("reports an unknown document as not indexed", () => {
-    expect(status(openDb(":memory:"), "nope")).toEqual({ state: "not_indexed" });
+    expect(status(openDb(":memory:"), "nope")).toEqual({ state: "not_indexed", indexed_version: null, indexed_at: null });
   });
 
-  it("reports version, time, revision and previous path of an indexed document", () => {
+  it("reports version, time and revision of an indexed document, and never its path", () => {
     const db = openDb(":memory:");
     db.prepare(
       `INSERT INTO documents (doc_id, path, previous_path, title, folder, version, revision, indexed_at)
@@ -46,7 +46,6 @@ describe("status", () => {
       indexed_version: "2026-10-13T14:02:11+02:00",
       indexed_at: "2026-10-13T14:02:12+02:00",
       revision: 4,
-      previous_path: "/Public/a.md",
       freshness_seconds: null,
     });
   });

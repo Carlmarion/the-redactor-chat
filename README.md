@@ -25,10 +25,17 @@ Every command prints JSON. The store is a single file, `./redactor.db` by defaul
 ./bin/redactor serve --feed-url <url>        # (in progress)
 ```
 
-## Tests
+`status` is meant for operators: it takes no user, so it never shows a document's path or title.
+
+Timestamps are Amsterdam time with offset. Money is in euros.
+
+## Development
 
 ```sh
 npm test
 npm run typecheck
 npm run lint
 ```
+
+How this project is built with an AI assistant, and the quality gate every change passes:
+[`AGENTS.md`](AGENTS.md).

@@ -1,5 +1,6 @@
-// The one store (decision 0002). Everything here is derived data: it can be rebuilt
-// from the corpus, the permission list and the feed.
+// The one store (decision 0002). Most tables are derived: they can be rebuilt from the corpus,
+// the permission list and the feed. `events` and `cost_ledger` are records of what happened
+// and cannot be rebuilt; they are the part to back up.
 
 import { EMBEDDING_MODEL } from "../config.ts";
 

@@ -5,7 +5,6 @@ interface DocumentRow {
   version: string;
   indexed_at: string | null;
   revision: number;
-  previous_path: string | null;
   deleted: number;
   passages: number;
   received_at: string | null;
@@ -14,7 +13,7 @@ interface DocumentRow {
 export function status(db: Db, docId: DocId): StatusResult {
   const row = db
     .prepare(
-      `SELECT d.version, d.indexed_at, d.revision, d.previous_path, d.deleted,
+      `SELECT d.version, d.indexed_at, d.revision, d.deleted,
               (SELECT count(*) FROM passages p WHERE p.doc_id = d.doc_id) AS passages,
               e.received_at
        FROM documents d LEFT JOIN events e ON e.event_id = d.source_event_id
@@ -22,7 +21,7 @@ export function status(db: Db, docId: DocId): StatusResult {
     )
     .get(docId) as DocumentRow | undefined;
 
-  if (!row || row.indexed_at === null) return { state: "not_indexed" };
+  if (!row || row.indexed_at === null) return { state: "not_indexed", indexed_version: null, indexed_at: null };
   const stamp = { indexed_version: row.version, indexed_at: row.indexed_at };
   if (row.deleted) return { state: "deleted", ...stamp };
   if (row.passages === 0) return { state: "not_searchable", ...stamp, reason: "no_readable_text" };
@@ -30,7 +29,6 @@ export function status(db: Db, docId: DocId): StatusResult {
     state: "indexed",
     ...stamp,
     revision: row.revision,
-    previous_path: row.previous_path,
     freshness_seconds: row.received_at === null ? null : secondsBetween(row.received_at, row.indexed_at),
   };
 }

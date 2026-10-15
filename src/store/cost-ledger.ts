@@ -1,4 +1,5 @@
 import type { CostEntry, CostLedger } from "../ports.ts";
+import { amsterdamIso } from "../time.ts";
 import type { Db } from "./db.ts";
 
 export class SqliteCostLedger implements CostLedger {
@@ -11,7 +12,7 @@ export class SqliteCostLedger implements CostLedger {
   }
 
   record(entry: CostEntry): void {
-    this.insert.run(new Date().toISOString(), entry.operation, entry.mode, entry.requests, entry.tokens, entry.eur);
+    this.insert.run(amsterdamIso(), entry.operation, entry.mode, entry.requests, entry.tokens, entry.eur);
   }
 
   /** A bookmark in the ledger, to total what a run spent with `totalSince`. */

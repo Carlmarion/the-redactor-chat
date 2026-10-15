@@ -45,7 +45,8 @@ describe("Indexer", () => {
     expect(db.prepare("SELECT text FROM passage_fts WHERE passage_fts MATCH '27'").pluck().all()).toHaveLength(1);
     expect(db.prepare("SELECT text FROM passage_fts WHERE passage_fts MATCH '25'").pluck().all()).toHaveLength(0);
     expect(db.prepare("SELECT principal_id FROM doc_access").pluck().all()).toEqual(["hr-team"]);
-    expect(status(db, "d02")).toMatchObject({ state: "indexed", indexed_version: "v2", revision: 2, previous_path: "/Public/leave.md" });
+    expect(status(db, "d02")).toMatchObject({ state: "indexed", indexed_version: "v2", revision: 2 });
+    expect(db.prepare("SELECT previous_path FROM documents").pluck().get()).toBe("/Public/leave.md");
   });
 
   it("indexes a document without readable text as not searchable", async () => {

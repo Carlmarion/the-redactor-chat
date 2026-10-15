@@ -19,20 +19,24 @@ export interface AskResult {
   sources: Source[];
 }
 
+/**
+ * Always carries `indexed_version` and `indexed_at` (null when never indexed), so a caller that
+ * reads only the contract's two fields never breaks. Never carries a path or title: `status`
+ * takes no user, so it must not reveal where a document lives or what it is called (C11).
+ */
 export type StatusResult =
   | {
       state: "indexed";
       indexed_version: string;
       indexed_at: string;
       revision: number;
-      previous_path: string | null;
       /** Feed delivery → answerable, in seconds. Null when the state came from the initial load. */
       freshness_seconds: number | null;
     }
   /** Indexed, but no readable text: a scan or an image-only file (C12). */
   | { state: "not_searchable"; indexed_version: string; indexed_at: string; reason: "no_readable_text" }
   | { state: "deleted"; indexed_version: string; indexed_at: string }
-  | { state: "not_indexed" };
+  | { state: "not_indexed"; indexed_version: null; indexed_at: null };
 
 /** A change event as served by the feed. Any action may appear (C4). */
 export type FeedEvent =
