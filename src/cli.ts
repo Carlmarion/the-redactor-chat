@@ -1,6 +1,12 @@
 // The judge's door, command-line side. Every command prints JSON on stdout.
 import { parseArgs } from "node:util";
-import { openDb } from "./store/db.ts";
+import { Indexer } from "./ingest/indexer.ts";
+import { loadCorpus } from "./ingest/load.ts";
+import { MeteredEmbedder } from "./simulator/metered-embedder.ts";
+import { LocalEmbedder } from "./simulator/local-embedder.ts";
+import { SampleData } from "./sources/sample-data.ts";
+import { SqliteCostLedger } from "./store/cost-ledger.ts";
+import { openDb, type Db } from "./store/db.ts";
 import { status } from "./status.ts";
 
 const USAGE = `redactor <command> [options]
@@ -13,14 +19,16 @@ Commands:
 
 Options:
   --db <path>                  Store file (default: ./redactor.db)
+  --data <dir>                 Corpus and permission list for ingest (default: ./data/sample)
 `;
 
-function main(argv: string[]): number {
+async function main(argv: string[]): Promise<number> {
   const { values, positionals } = parseArgs({
     args: argv,
     allowPositionals: true,
     options: {
       db: { type: "string", default: "./redactor.db" },
+      data: { type: "string", default: "./data/sample" },
       "feed-url": { type: "string" },
       help: { type: "boolean", short: "h" },
     },
@@ -39,13 +47,26 @@ function main(argv: string[]): number {
       print(status(openDb(values.db), docId));
       return 0;
     }
+    case "ingest": {
+      print(await ingest(openDb(values.db), values.data));
+      return 0;
+    }
     case "ask":
-    case "ingest":
     case "serve":
       return fail(`${command} is not implemented yet`);
     default:
       return fail(`unknown command "${command}"\n\n${USAGE}`);
   }
+}
+
+/** Initial load in batch mode: half price, no throttle (the brief's batch embed). */
+async function ingest(db: Db, dataDir: string) {
+  const sample = new SampleData(dataDir);
+  const ledger = new SqliteCostLedger(db);
+  const mark = ledger.mark();
+  const embedder = new MeteredEmbedder(await LocalEmbedder.load(), ledger);
+  const summary = await loadCorpus(db, { corpus: sample, documents: sample, permissions: sample }, new Indexer(db, embedder, "batch"));
+  return { ...summary, embed_cost: ledger.totalSince(mark) };
 }
 
 function print(value: unknown): void {
@@ -57,4 +78,4 @@ function fail(message: string): number {
   return 1;
 }
 
-process.exitCode = main(process.argv.slice(2));
+process.exitCode = await main(process.argv.slice(2));

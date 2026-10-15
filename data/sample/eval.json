@@ -21,12 +21,14 @@
     { "id": "E18", "trap": "C4",  "phase": "replayed", "user": "yusuf", "question": "Can I lease an e-bike through the company?", "must_cite": ["d21"] },
     { "id": "E19", "trap": "T5",  "phase": "replayed", "user": "daan",  "question": "How often does the tracking service receive truck positions?", "must_cite": ["d20"], "must_contain": ["10 seconds"] },
     { "id": "E20", "trap": "T5",  "phase": "replayed", "user": "joost", "question": "How often does the tracking service receive truck positions?", "must_not_cite": ["d20"] },
-    { "id": "E21", "trap": "T7",  "phase": "loaded",   "user": "anouk", "question": "How far can HR go on a senior engineer offer without escalation?", "must_cite": ["d08"], "bonus": "redaction: anouk is HR but not payroll; the salary section of d08 is a candidate for redaction" }
+    { "id": "E21", "trap": "T7",  "phase": "loaded",   "user": "anouk", "question": "How far can HR go on a senior engineer offer without escalation?", "must_cite": ["d08"], "bonus": "redaction: anouk is HR but not payroll; the salary section of d08 is a candidate for redaction" },
+    { "id": "E22", "trap": "T14", "phase": "loaded",   "user": "emma",  "question": "Who is at the top of the escalation ladder?", "must_cite": ["d14"], "must_contain": ["CTO"] }
   ],
   "status_checks": [
     { "phase": "replayed", "doc_id": "d02", "indexed_version_from": "event at deliver_at_s 10" },
     { "phase": "replayed", "doc_id": "d20", "indexed_version_from": "event at deliver_at_s 51", "path": "/Engineering/platform/architecture.md" },
     { "phase": "replayed", "doc_id": "d07", "indexed_version_from": "initial load", "path": "/Public/it/password-policy.md" },
-    { "phase": "replayed", "doc_id": "d16", "expect": "deleted" }
+    { "phase": "replayed", "doc_id": "d16", "expect": "deleted" },
+    { "phase": "loaded", "doc_id": "d22", "expect": "not_searchable" }
   ]
 }

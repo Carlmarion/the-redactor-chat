@@ -16,6 +16,7 @@ Open questions to the client are tracked in the daily updates.
 | C6 | `modified_at` | Time zone, ordering, duplicates | ISO 8601 with offset, Amsterdam time. Order not guaranteed, duplicates possible. **Processing is idempotent** | The brief fixes Amsterdam time; feeds redeliver |
 | C7 | "Reads it live from a URL given at start" | Transport undefined | **Polling** with a `since` cursor, behind a `FeedReader` interface. Optional `at` | Calls take an `at` parameter: request/response HTTP (decision 0008) |
 | C8 | Access changes daily | How do team or folder access changes arrive? | **On the same feed**, as their own event type. The watcher dispatches by type | "Documents and access change every day": one feed |
+| C12 | "The corpus … from IT" | Document formats unspecified: a shared drive holds scans, images, PDFs | We index **text**. Image alt text and captions are kept as text. A document with no readable text is indexed as **`not_searchable`**, logged with its reason, and visible in `status`. No OCR | A silent gap is worse than a visible one: staff would be told "nothing found" when the answer is in a scan |
 
 ## Outbound: ask and status
 
@@ -23,15 +24,19 @@ Open questions to the client are tracked in the daily updates.
 |---|---|---|---|
 | C9 | `sources[]` | Shape undefined | `{ doc_id, path, title, passage_id, snippet, url }`, with `url` nullable |
 | C10 | `answer` | No-answer case, unknown user | Explicit messages: "not found in documents you can access". Unknown user sees nothing |
-| C11 | `status(doc_id) -> {indexed_version, indexed_at}` | Type of version; unknown or deleted doc | `indexed_version` = `modified_at` of the last state applied (comparable with the feed). Extra fields: `revision` (count of states indexed), `previous_path`. Unknown or deleted doc → explicit status |
+| C11 | `status(doc_id) -> {indexed_version, indexed_at}` | Type of version; unknown or deleted doc | `indexed_version` = `modified_at` of the last state applied (comparable with the feed). Extra fields: `revision` (count of states indexed), `previous_path`, `freshness_seconds` (feed delivery → answerable, computed; null after the initial load). Unknown or deleted doc → explicit status |
 
 ```json
 {
   "indexed_version": "2026-10-13T14:02:11+02:00",
   "indexed_at": "2026-10-13T14:02:12.204+02:00",
   "revision": 4,
-  "previous_path": "/Public/salary-bands.md"
+  "previous_path": "/Public/salary-bands.md",
+  "freshness_seconds": 1.2
 }
 ```
 
 `revision` counts the states we indexed, not edits at the source: coalesced events count once.
+
+`freshness_seconds` is measured from the **first** event behind the state, so coalescing never hides waiting time.
+It uses our clock only (`received_at` → `indexed_at`); `modified_at` is the client's clock and can be days old for a late event.

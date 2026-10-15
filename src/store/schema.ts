@@ -1,22 +1,25 @@
 // The one store (decision 0002). Everything here is derived data: it can be rebuilt
 // from the corpus, the permission list and the feed.
 
-export const EMBEDDING_DIMENSIONS = 384;
+import { EMBEDDING_MODEL } from "../config.ts";
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const SCHEMA = `
+-- folder = the governing folder: the closest parent folder with an access rule (decision 0007).
 CREATE TABLE documents (
   doc_id        TEXT PRIMARY KEY,
   path          TEXT NOT NULL,
   previous_path TEXT,
   title         TEXT NOT NULL,
-  folder        TEXT NOT NULL,
+  folder        TEXT,
   url           TEXT,
   content_hash  TEXT,
   version       TEXT NOT NULL,
   revision      INTEGER NOT NULL DEFAULT 0,
   indexed_at    TEXT,
+  -- First feed event behind the current state; null when it came from the initial load.
+  source_event_id INTEGER REFERENCES events(event_id),
   deleted       INTEGER NOT NULL DEFAULT 0
 );
 
@@ -30,7 +33,7 @@ CREATE TABLE passages (
 );
 
 -- rowid = passage_id
-CREATE VIRTUAL TABLE passage_vec USING vec0(embedding float[${EMBEDDING_DIMENSIONS}] distance_metric=cosine);
+CREATE VIRTUAL TABLE passage_vec USING vec0(embedding float[${EMBEDDING_MODEL.dimensions}] distance_metric=cosine);
 
 -- rowid = passage_id
 CREATE VIRTUAL TABLE passage_fts USING fts5(text, tokenize = 'unicode61 remove_diacritics 2');

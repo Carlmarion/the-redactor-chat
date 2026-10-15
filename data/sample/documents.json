@@ -20,6 +20,7 @@
     { "doc_id": "d17", "path": "/Management/reorganisation-plan-2027.md", "title": "Reorganisation plan 2027", "folder": "/Management", "allowed": ["management"], "url": "https://drive.example/noordlicht/d17" },
     { "doc_id": "d18", "path": "/Management/board-minutes-2026-09.md", "title": "Board minutes, September 2026", "folder": "/Management", "allowed": ["management"], "url": "https://drive.example/noordlicht/d18" },
     { "doc_id": "d19", "path": "/HR/relocation-support.md", "title": "Relocation support", "folder": "/HR", "allowed": ["hr-team", "daan"], "url": "https://drive.example/noordlicht/d19" },
-    { "doc_id": "d20", "path": "/Engineering/architecture-overview.md", "title": "Architecture overview", "folder": "/Engineering", "allowed": ["eng-team"], "url": null }
+    { "doc_id": "d20", "path": "/Engineering/architecture-overview.md", "title": "Architecture overview", "folder": "/Engineering", "allowed": ["eng-team"], "url": null },
+    { "doc_id": "d22", "path": "/Finance/contracts/office-lease-signed.pdf", "title": "Office lease, signed scan", "folder": "/Finance", "allowed": ["finance-team", "management"], "url": "https://drive.example/noordlicht/d22" }
   ]
 }

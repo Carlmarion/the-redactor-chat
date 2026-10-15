@@ -1,12 +1,12 @@
 # Sample data: Noordlicht Logistics
 
 Generated stand-in for the client's corpus, permission list and change feed, used until the real dump arrives.
-Noordlicht Logistics is fictional: 8 staff accounts, 6 groups, 20 documents in English and Dutch.
+Noordlicht Logistics is fictional: 8 staff accounts, 6 groups, 21 documents in English and Dutch, one of them a scan.
 
 | File | What it is |
 |---|---|
 | `documents.json` | Document list in the data-contract shape, plus our `doc_id` (C1) and nullable `url` (C9) |
-| `corpus/<doc_id>.md` | Text of each document at export time |
+| `corpus/<doc_id>.<ext>` | Each document at export time: `.md` text, or `d22.pdf`, a stand-in for a scanned contract |
 | `permissions.json` | Users, group memberships, folder rules |
 | `feed-script.json` | Scripted change events for our feed simulator, with the text each change introduces |
 | `revisions/<doc_id>/<n>.md` | Text served by the document source after a scripted change |
@@ -41,6 +41,8 @@ Folders: `/Public` all-staff · `/HR` hr-team · `/HR/Payroll` payroll · `/Fina
 | T10 | — | anouk is HR but not payroll | No access to /HR/Payroll | E08–E09 |
 | T11 | — | English question, Dutch document (d06) | Found | E13 |
 | T12 | +60 s | bram leaves finance-team, on the same feed | Loses /Finance | E14–E15 |
+| T13 | — | d22 is a signed scan with no readable text | Status `not_searchable`, never silently missing | status |
+| T14 | — | d14 holds an image whose alt text carries the escalation ladder | Alt text is searchable | E22 |
 | C4 | +80 s, +90 s | `create` (d21, new) and unknown action `rename` (d04) | Both reconciled | E18, status |
 
 ## Shapes we invented (to replace when the real feed arrives)

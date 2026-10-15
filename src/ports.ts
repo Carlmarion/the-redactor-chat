@@ -1,7 +1,22 @@
 // Every external input enters through one of these interfaces (decision 0001).
 // Today each is backed by our own simulator and sample data; the client's systems plug in later.
 
-import type { DocId, FeedEvent, Passage, PermissionSnapshot } from "./types.ts";
+import type { DocId, FeedEvent, Passage, PermissionSnapshot, PrincipalId } from "./types.ts";
+
+/** One document as listed in the corpus export: `{path, title, folder, allowed}` plus our id (C1). */
+export interface CorpusEntry {
+  doc_id: DocId;
+  path: string;
+  title: string;
+  /** Kept for audit only: access follows the folder rules (C3). */
+  allowed: PrincipalId[];
+  url: string | null;
+}
+
+/** The corpus export: which documents exist, as of when. */
+export interface CorpusSource {
+  list(): Promise<{ exported_at: string; documents: CorpusEntry[] }>;
+}
 
 export interface SourceDocument {
   text: string;
@@ -27,8 +42,21 @@ export type EmbedMode = "realtime" | "batch";
 
 export interface Embedder {
   readonly dimensions: number;
-  countTokens(text: string): number;
+  countTokens(text: string, kind?: EmbedKind): number;
   embed(texts: string[], kind: EmbedKind, mode: EmbedMode): Promise<Float32Array[]>;
+}
+
+export interface CostEntry {
+  operation: "embed";
+  mode: EmbedMode;
+  requests: number;
+  tokens: number;
+  eur: number;
+}
+
+/** Where the adapter records what each simulator call would cost. */
+export interface CostLedger {
+  record(entry: CostEntry): void;
 }
 
 export interface ExtractResult {
