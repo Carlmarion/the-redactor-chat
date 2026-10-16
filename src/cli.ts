@@ -9,6 +9,8 @@ import { loadCorpus } from "./ingest/load.ts";
 import { MeteredEmbedder } from "./simulator/metered-embedder.ts";
 import { LocalEmbedder } from "./simulator/local-embedder.ts";
 import { LocalExtractor } from "./simulator/local-extractor.ts";
+import { FeedScript } from "./simulator/feed-script.ts";
+import { feedServer } from "./simulator/feed-server.ts";
 import { SampleData } from "./sources/sample-data.ts";
 import { SqliteCostLedger } from "./store/cost-ledger.ts";
 import { openDb, type Db } from "./store/db.ts";
@@ -22,6 +24,7 @@ Commands:
   ingest                         Load the corpus and permission list into an empty store
   serve --feed-url <url>         Follow the change feed and keep the store fresh
   eval [--phase loaded]          Run the eval set on a fresh in-memory store; never touches --db
+  feed-sim [--port 4100]         Our simulator's scripted feed: replays <data>/feed-script.json from now
 
 Options:
   --db <path>                    Store file (default: ./redactor.db)
@@ -42,6 +45,7 @@ async function main(argv: string[]): Promise<number> {
       phase: { type: "string", default: "loaded" },
       "passage-tokens": { type: "string" },
       json: { type: "boolean" },
+      port: { type: "string", default: "4100" },
       help: { type: "boolean", short: "h" },
     },
   });
@@ -85,6 +89,19 @@ async function main(argv: string[]): Promise<number> {
       if (values.json) print(runs);
       else process.stdout.write(`${runs.map(formatRun).join("\n\n")}\n`);
       return runs.some((r) => r.leaks > 0) ? 2 : 0;
+    }
+    case "feed-sim": {
+      const script = await FeedScript.load(values.data, new Date(), new SampleData(values.data));
+      const port = Number(values.port);
+      feedServer(script).listen(port, () => {
+        process.stderr.write(
+          `feed simulator on http://localhost:${port}\n` +
+            `  events:    http://localhost:${port}/events\n` +
+            `  documents: http://localhost:${port}/documents/<doc_id>\n` +
+            `  last scripted event at ${new Date(script.endsAt).toLocaleTimeString("en-GB", { timeZone: "Europe/Amsterdam" })}\n`,
+        );
+      });
+      return new Promise<number>(() => undefined);
     }
     case "serve":
       return fail(`${command} is not implemented yet`);
