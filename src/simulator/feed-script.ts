@@ -36,9 +36,12 @@ export class FeedScript {
     private readonly corpus: DocumentSource,
   ) {}
 
-  /** `start` is when the replay begins: event times in the script are seconds after it. */
-  static async load(dataDir: string, start: Date, corpus: DocumentSource): Promise<FeedScript> {
-    const script = JSON.parse(await readFile(join(dataDir, "feed-script.json"), "utf8")) as { events: ScriptEntry[] };
+  /**
+   * `start` is when the replay begins: event times in the script are seconds after it.
+   * Revision files named in the script are read relative to `dataDir`.
+   */
+  static async load(dataDir: string, start: Date, corpus: DocumentSource, scriptPath = join(dataDir, "feed-script.json")): Promise<FeedScript> {
+    const script = JSON.parse(await readFile(scriptPath, "utf8")) as { events: ScriptEntry[] };
     const t0 = start.getTime();
     const schedule = script.events
       .map((entry): Scheduled => {
