@@ -64,3 +64,19 @@ this passage answer the question?" Yes: answer. No: "not found".
    instead of one. Free; kept only if the eval says so.
 2. The relevance check (direction 2): small, cheap, measurable.
 3. Redaction (direction 1): the larger change, and the one that needs the client's input.
+
+## Product choices to offer the client
+
+These change what the system does when the client's own drive is wrong, so they are the client's
+decision, not ours. Not built.
+
+- **Hold large widenings.** When a document moves from a restricted folder to one most staff can
+  open, wait (for example 15 minutes) or ask a person to confirm before it becomes searchable.
+  Catches a file moved to the wrong folder by mistake, at the cost of disagreeing with the drive
+  for a while.
+- **Read before widening.** Before a document becomes visible to many more people, look for
+  sensitive content (pay, bank details, health) and alert its owner. The same tooling as the
+  relevance check and redaction above.
+
+What is built: every widening of access is logged with who could see the document before and
+after, so a mistake is visible within minutes.
