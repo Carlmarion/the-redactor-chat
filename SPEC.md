@@ -186,7 +186,7 @@ Bonus, only once the core is done: React demo page, passage-level redaction, "ex
 ### Fri 16
 - [x] Retriever (hybrid) + answerer + `ask`
 - [x] Feed simulator (HTTP, scripted, `at`)
-- [ ] Feed watcher + `status`
+- [x] Feed watcher + reconciler (decision 0010: restrict now, widen after a quiet second; access log)
 - [ ] Freshness tests driven by `at`
 - [ ] Core green
 

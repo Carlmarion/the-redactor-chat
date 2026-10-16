@@ -11,6 +11,10 @@ import { LocalEmbedder } from "./simulator/local-embedder.ts";
 import { LocalExtractor } from "./simulator/local-extractor.ts";
 import { FeedScript } from "./simulator/feed-script.ts";
 import { feedServer } from "./simulator/feed-server.ts";
+import { EventLog } from "./feed/event-log.ts";
+import { Reconciler } from "./feed/reconciler.ts";
+import { FeedWatcher } from "./feed/watcher.ts";
+import { HttpDocumentSource, HttpFeedReader } from "./sources/http-feed.ts";
 import { SampleData } from "./sources/sample-data.ts";
 import { SqliteCostLedger } from "./store/cost-ledger.ts";
 import { openDb, type Db } from "./store/db.ts";
@@ -22,9 +26,12 @@ Commands:
   ask <user_id> "<question>"     Answer a question with sources, using only what that user may open
   status <doc_id>... [--user <id>]  Which version of each document is indexed, and when
   ingest                         Load the corpus and permission list into an empty store
-  serve --feed-url <url>         Follow the change feed and keep the store fresh
+  serve --feed-url <url> [--documents-url <url>]
+                                 Follow the change feed and keep the store fresh
+                                 (documents default: <feed origin>/documents)
   eval [--phase loaded]          Run the eval set on a fresh in-memory store; never touches --db
-  feed-sim [--port 4100]         Our simulator's scripted feed: replays <data>/feed-script.json from now
+  feed-sim [--port 4100] [--script <file>]
+                                 Our simulator's scripted feed: replays <data>/feed-script.json (or <file>) from now
 
 Options:
   --db <path>                    Store file (default: ./redactor.db)
@@ -46,6 +53,8 @@ async function main(argv: string[]): Promise<number> {
       "passage-tokens": { type: "string" },
       json: { type: "boolean" },
       port: { type: "string", default: "4100" },
+      script: { type: "string" },
+      "documents-url": { type: "string" },
       help: { type: "boolean", short: "h" },
     },
   });
@@ -91,7 +100,7 @@ async function main(argv: string[]): Promise<number> {
       return runs.some((r) => r.leaks > 0) ? 2 : 0;
     }
     case "feed-sim": {
-      const script = await FeedScript.load(values.data, new Date(), new SampleData(values.data));
+      const script = await FeedScript.load(values.data, new Date(), new SampleData(values.data), values.script);
       const port = Number(values.port);
       feedServer(script).listen(port, () => {
         process.stderr.write(
@@ -103,8 +112,19 @@ async function main(argv: string[]): Promise<number> {
       });
       return new Promise<number>(() => undefined);
     }
-    case "serve":
-      return fail(`${command} is not implemented yet`);
+    case "serve": {
+      const feedUrl = values["feed-url"];
+      if (!feedUrl) return fail("serve needs --feed-url <url>");
+      const documentsUrl = values["documents-url"] ?? new URL("/documents", feedUrl).toString();
+      const db = openDb(values.db);
+      const embedder = new MeteredEmbedder(await LocalEmbedder.load(), new SqliteCostLedger(db));
+      const log = new EventLog(db);
+      const reconciler = new Reconciler(db, new Indexer(db, embedder, "realtime"), new HttpDocumentSource(documentsUrl), log);
+      const watcher = new FeedWatcher(db, new HttpFeedReader(feedUrl), log, reconciler);
+      process.stderr.write(`following ${feedUrl} (documents: ${documentsUrl}), polling every second\n`);
+      await watcher.run(1000, new AbortController().signal, (e) => process.stderr.write(`feed: ${String(e)}\n`));
+      return 0;
+    }
     default:
       return fail(`unknown command "${command}"\n\n${USAGE}`);
   }

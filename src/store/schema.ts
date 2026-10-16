@@ -1,10 +1,10 @@
 // The one store (decision 0002). Most tables are derived: they can be rebuilt from the corpus,
-// the permission list and the feed. `events` and `cost_ledger` are records of what happened
-// and cannot be rebuilt; they are the part to back up.
+// the permission list and the feed. `events`, `access_log` and `cost_ledger` are records of what
+// happened and cannot be rebuilt; they are the part to back up.
 
 import { EMBEDDING_MODEL } from "../config.ts";
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export const SCHEMA = `
 -- folder = the governing folder: the closest parent folder with an access rule (decision 0007).
@@ -81,6 +81,20 @@ CREATE TABLE events (
   applied_at  TEXT
 );
 CREATE INDEX events_by_doc ON events (doc_id, modified_at);
+
+-- Every change in who can see a document, in people: how IT spots a file moved to the wrong folder.
+CREATE TABLE access_log (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  at              TEXT NOT NULL,
+  doc_id          TEXT NOT NULL,
+  folder_before   TEXT,
+  folder_after    TEXT,
+  people_before   INTEGER NOT NULL,
+  people_after    INTEGER NOT NULL,
+  newcomers       TEXT NOT NULL,
+  widened         INTEGER NOT NULL,
+  cause_event_id  INTEGER REFERENCES events(event_id)
+);
 
 CREATE TABLE feed_cursor (
   id     INTEGER PRIMARY KEY CHECK (id = 1),
