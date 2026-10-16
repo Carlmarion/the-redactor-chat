@@ -17,17 +17,29 @@ npm install
 ## Commands
 
 Every command prints JSON. The store is a single file, `./redactor.db` by default (`--db <path>` to change it).
+A guided tour of everything below: [`docs/try-it.md`](docs/try-it.md).
 
 ```sh
-./bin/redactor ingest [--data data/sample]    # load the corpus and permission list (first run downloads the model, ~145 MB)
-./bin/redactor status <doc_id>... [--user <id>]  # which version is indexed, when, how fresh; several ids at once; with --user, hidden docs look unknown
-./bin/redactor eval [--passage-tokens 500,250]   # run the eval set on a fresh in-memory store (never touches --db); exit 2 on any leak
-./bin/redactor ask <user_id> "<question>"    # answer with sources, from what that user may open (~3 s: loads the model)
-./bin/redactor serve --feed-url <url>        # follow the change feed and keep the store fresh (documents read from <feed origin>/documents)
-./bin/redactor feed-sim [--port 4100] [--script <file>]  # our simulator's scripted feed: replays data/sample/feed-script.json (or <file>) from now
+./bin/redactor ingest [--data data/sample]       # load the corpus and permission list (first run downloads the model, ~145 MB)
+./bin/redactor ask <user_id> "<question>"        # answer with sources, from what that user may open (~3 s: loads the model)
+./bin/redactor status <doc_id>... [--user <id>]  # which version is indexed, when, how fresh; with --user, hidden docs look unknown
+./bin/redactor serve [--port 8080] [--feed-url <url>]
+                                                 # HTTP: POST /ask {user_id, question}, GET /status/<doc_id>[?user_id=]
+                                                 # with --feed-url, also follows the feed (documents from <feed origin>/documents)
+./bin/redactor feed-sim [--step | --pace <n>]    # our simulator's scripted feed; --step: one event per Enter
+./bin/redactor costs                             # what the simulator calls would have cost, in euros
+./bin/redactor eval [--phase loaded|replayed]    # the eval set on a fresh in-memory store; exit 2 on any leak
 ```
 
-`status` is meant for operators: it takes no user, so it never shows a document's path or title.
+### Over HTTP
+
+```sh
+./bin/redactor serve --feed-url http://localhost:4100/events
+curl -X POST localhost:8080/ask -d '{"user_id":"yusuf","question":"How many days of paid leave do I get?"}'
+curl localhost:8080/status/d02
+```
+
+`status` is meant for operators: without a user it never shows a document's path or title.
 
 Timestamps are Amsterdam time with offset. Money is in euros.
 
@@ -37,8 +49,8 @@ The client provides no feed of its own: the change feed is served by our simulat
 the client's day of changes once their dump arrives. In two terminals:
 
 ```sh
-./bin/redactor feed-sim                                        # terminal 1: the scripted day starts now
-./bin/redactor serve --feed-url http://localhost:4100/events   # terminal 2: keeps the store fresh
+./bin/redactor feed-sim                                        # terminal 1: the scripted day starts now (--step: one event per Enter)
+./bin/redactor serve --feed-url http://localhost:4100/events   # terminal 2: keeps the store fresh, answers on :8080
 ./bin/redactor status d02                                      # any time: freshness_seconds after its edit at +10 s
 ```
 

@@ -43,3 +43,20 @@ test by heart. What would go further: [`../next-steps.md`](../next-steps.md).
    different corpus, so they are re-measured.
 4. **What makes us change it?** The client's corpus and feed: `redactor eval` runs again on their
    data on Monday, and the numbers here are updated as a dated note.
+
+## Update 2026-10-16: deterministic scores, and the replayed phase
+
+A live run showed the same passage scoring 0.825 in one store and 0.828 in another: extract
+embedded its candidates in one batch, and padding shifted scores by a few thousandths depending on
+the neighbours. Near a 0.825 threshold that flips an answer. Extract now embeds each candidate on
+its own; scores are identical across stores. Re-measured:
+
+| Phase | Pass | Leaks | Not passing |
+|---|---|---|---|
+| loaded (13) | 11 | 0 | E08, E11 off topic |
+| replayed (9, after the whole feed) | 6 | 0 | E04, E15 off topic; E05 cites the HR handbook's salary section instead of the salary bands |
+
+Status checks after the feed: 4/4. E05 is a ranking miss among documents the person may read:
+extract keeps the passage closest in meaning, and the handbook's sentence about a senior engineer
+offer is closer than the bands table. Next lever, in order: the two-word rule, then the relevance
+check (`../next-steps.md`).

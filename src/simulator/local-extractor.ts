@@ -16,8 +16,11 @@ export class LocalExtractor implements Extractor {
     if (passages.length === 0) return null;
 
     const [q] = await this.model.embed([question], "query", "realtime");
-    const vectors = await this.model.embed(passages.map((p) => p.text), "passage", "realtime");
     if (!q) return null;
+    // One passage at a time: in a batch, padding shifts scores by a few thousandths depending on
+    // the neighbours, enough to flip an answer near the threshold.
+    const vectors: Float32Array[] = [];
+    for (const p of passages) vectors.push(...(await this.model.embed([p.text], "passage", "realtime")));
 
     let best: ExtractResult | null = null;
     for (const [i, passage] of passages.entries()) {
