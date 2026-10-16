@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import { labelDocument } from "../access/doc-access.ts";
 import { PASSAGE_TOKENS } from "../config.ts";
 import { PASSAGE_MAX_TOKENS } from "../simulator/limits.ts";
+import { dropPassages } from "../store/passages.ts";
 import { amsterdamIso } from "../time.ts";
 import type { EmbedMode, Embedder } from "../ports.ts";
 import type { Db } from "../store/db.ts";
@@ -28,6 +29,11 @@ export interface DocumentState {
 export interface IndexOutcome {
   passages: number;
   searchable: boolean;
+}
+
+/** The fingerprint that tells whether a document's text changed. */
+export function contentHash(text: string): string {
+  return createHash("sha256").update(text).digest("hex");
 }
 
 export class Indexer {
@@ -68,7 +74,7 @@ export class Indexer {
       previous_path: previousPath,
       title: state.title,
       url: state.url,
-      content_hash: createHash("sha256").update(state.text).digest("hex"),
+      content_hash: contentHash(state.text),
       version: state.version,
       indexed_at: amsterdamIso(),
       source_event_id: state.source_event_id,
@@ -78,17 +84,9 @@ export class Indexer {
     labelDocument(db, state.doc_id, state.path);
   }
 
-  /** Virtual tables do not cascade, so their rows are removed by hand. */
   private replacePassages(docId: DocId, passages: string[], vectors: Float32Array[]): void {
     const { db } = this;
-    const oldIds = db.prepare("SELECT passage_id FROM passages WHERE doc_id = ?").pluck().all(docId) as number[];
-    const dropVec = db.prepare("DELETE FROM passage_vec WHERE rowid = ?");
-    const dropFts = db.prepare("DELETE FROM passage_fts WHERE rowid = ?");
-    for (const id of oldIds) {
-      dropVec.run(BigInt(id));
-      dropFts.run(id);
-    }
-    db.prepare("DELETE FROM passages WHERE doc_id = ?").run(docId);
+    dropPassages(db, docId);
 
     const insert = db.prepare("INSERT INTO passages (doc_id, ord, text, token_count) VALUES (?, ?, ?, ?)");
     const insertVec = db.prepare("INSERT INTO passage_vec (rowid, embedding) VALUES (?, ?)");
