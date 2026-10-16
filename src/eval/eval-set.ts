@@ -20,8 +20,23 @@ export interface EvalQuestion {
 /** `leak` is the one verdict that must never appear. `off_topic` passes but is worth a look. */
 export type Verdict = "pass" | "off_topic" | "miss" | "leak";
 
-export async function loadEvalSet(path: string): Promise<EvalQuestion[]> {
-  return (JSON.parse(await readFile(path, "utf8")) as { questions: EvalQuestion[] }).questions;
+export interface StatusCheck {
+  phase: Phase;
+  doc_id: DocId;
+  /** "initial load", or "event at deliver_at_s <n>". */
+  indexed_version_from?: string;
+  path?: string;
+  expect?: string;
+}
+
+export interface EvalSet {
+  questions: EvalQuestion[];
+  status_checks: StatusCheck[];
+}
+
+export async function loadEvalSet(path: string): Promise<EvalSet> {
+  const set = JSON.parse(await readFile(path, "utf8")) as Partial<EvalSet>;
+  return { questions: set.questions ?? [], status_checks: set.status_checks ?? [] };
 }
 
 export function judge(q: EvalQuestion, result: AskResult): Verdict {

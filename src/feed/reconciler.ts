@@ -60,7 +60,8 @@ export class Reconciler {
     return { docId, events, latest, decision, current, widensTo };
   }
 
-  async apply(plan: Plan): Promise<void> {
+  /** Applies the plan and returns one line saying what happened, for the operator. */
+  async apply(plan: Plan): Promise<string> {
     const { docId, latest, decision } = plan;
     const known = this.known(docId);
     const first = plan.events[0]?.event_id ?? null;
@@ -71,7 +72,7 @@ export class Reconciler {
     if (decision.kind === "ignore" || (decision.kind === "delete" && !known)) {
       const reason = decision.kind === "ignore" ? "stale: we hold a version at least as recent" : "nothing to delete";
       this.log.close(ids, "ignored", reason, now);
-      return;
+      return `${docId}: ignored (${reason})`;
     }
     if (decision.kind === "reindex") {
       const text = plan.current?.text ?? "";
@@ -101,6 +102,9 @@ export class Reconciler {
       this.logAccessChange(docId, known?.folder ?? null, peopleBefore, first, appliedAt);
       this.log.close(ids, OUTCOME[decision.kind], null, appliedAt);
     })();
+    const people = `${peopleBefore.size} → ${documentAudience(this.db, docId).size} people can see it`;
+    const merged = ids.length > 1 ? `, ${ids.length} events merged` : "";
+    return `${docId}: ${OUTCOME[decision.kind]} (${latest.action} ${latest.path}${merged}; ${people})`;
   }
 
   private known(docId: DocId): KnownRow | null {

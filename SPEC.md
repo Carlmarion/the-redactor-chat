@@ -187,7 +187,8 @@ Bonus, only once the core is done: React demo page, passage-level redaction, "ex
 - [x] Retriever (hybrid) + answerer + `ask`
 - [x] Feed simulator (HTTP, scripted, `at`)
 - [x] Feed watcher + reconciler (decision 0010: restrict now, widen after a quiet second; access log)
-- [ ] Freshness tests driven by `at`
+- [x] Freshness: scripted day replayed in tests and in `eval --phase replayed`; live freshness under 2 s
+- [x] HTTP API in `serve`; feed reset detected; `feed-sim --step/--pace`; `costs`
 - [ ] Core green
 
 ### Sat 17 – Sun 18

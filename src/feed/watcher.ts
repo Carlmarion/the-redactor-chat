@@ -17,11 +17,14 @@ export const WIDEN_SETTLE_MS = 1000;
 export interface WatcherOptions {
   now?: () => number;
   settleMs?: number;
+  /** Where the watcher reports what an operator should know (a reset feed, for example). */
+  notify?: (message: string) => void;
 }
 
 export class FeedWatcher {
   private readonly now: () => number;
   private readonly settleMs: number;
+  private readonly notify: (message: string) => void;
 
   constructor(
     private readonly db: Db,
@@ -32,12 +35,19 @@ export class FeedWatcher {
   ) {
     this.now = options.now ?? Date.now;
     this.settleMs = options.settleMs ?? WIDEN_SETTLE_MS;
+    this.notify = options.notify ?? (() => undefined);
   }
 
   /** One round: fetch what is new, then work through everything pending. */
   async tick(): Promise<void> {
-    const page = await this.reader.poll(this.log.cursor());
-    if (page.events.length > 0 || page.cursor !== this.log.cursor()) {
+    const stored = this.log.cursor();
+    let page = await this.reader.poll(stored);
+    if (isBehind(page.cursor, stored)) {
+      // The feed restarted its numbering. Reading it again is safe: decide() ignores what we hold.
+      this.notify(`feed was reset (cursor ${page.cursor} < ${stored}), reading again from the start`);
+      page = await this.reader.poll(null);
+    }
+    if (page.events.length > 0 || page.cursor !== stored) {
       this.log.record(page.events, page.cursor, new Date(this.now()));
     }
     await this.work();
@@ -64,8 +74,11 @@ export class FeedWatcher {
     }
     for (const events of byDoc.values()) {
       const plan = await this.reconciler.plan(events);
-      if (plan.widensTo.length > 0 && !this.quietSince(events)) continue;
-      await this.reconciler.apply(plan);
+      if (plan.widensTo.length > 0 && !this.quietSince(events)) {
+        this.notify(`${plan.docId}: would open to ${plan.widensTo.length} more people, waiting for a quiet second`);
+        continue;
+      }
+      this.notify(await this.reconciler.apply(plan));
     }
   }
 
@@ -76,7 +89,12 @@ export class FeedWatcher {
       return;
     }
     const { change } = JSON.parse(e.payload) as { change: AccessChange };
-    this.db.transaction(() => this.log.close([e.event_id], "applied", applyAccessChange(this.db, change), at))();
+    const said = this.db.transaction(() => {
+      const sentence = applyAccessChange(this.db, change);
+      this.log.close([e.event_id], "applied", sentence, at);
+      return sentence;
+    })();
+    this.notify(`team change: ${said}`);
   }
 
   /** True once the document's last event is at least `settleMs` old. */
@@ -84,4 +102,11 @@ export class FeedWatcher {
     const last = Math.max(...events.map((e) => Date.parse(e.received_at)));
     return this.now() - last >= this.settleMs;
   }
+}
+
+/** Numeric cursors only: an opaque cursor from another feed is never compared. */
+function isBehind(answered: string | null, stored: string | null): boolean {
+  const a = Number(answered);
+  const s = Number(stored);
+  return answered !== null && stored !== null && Number.isFinite(a) && Number.isFinite(s) && a < s;
 }
