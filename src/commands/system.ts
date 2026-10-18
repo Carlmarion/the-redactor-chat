@@ -1,5 +1,5 @@
-// What `ask` and `serve` both need: the store, the model loaded once, the metered embedder,
-// the extractor and the answer policy.
+// What `ask`, `ingest`, `serve` and `demo` need: the store, the model loaded once, the metered
+// embedder, the extractor and the answer policy.
 
 import type { AskDeps } from "../ask.ts";
 import { ANSWER_POLICY } from "../config.ts";
