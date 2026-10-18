@@ -189,10 +189,11 @@ Bonus, only once the core is done: React demo page, passage-level redaction, "ex
 - [x] Feed watcher + reconciler (decision 0010: restrict now, widen after a quiet second; access log)
 - [x] Freshness: scripted day replayed in tests and in `eval --phase replayed`; live freshness under 2 s
 - [x] HTTP API in `serve`; feed reset detected; `feed-sim --step/--pace`; `costs`
-- [ ] Core green
+- [x] Core green
 
 ### Sat 17 – Sun 18
-- [ ] Buffer / bonus
+- [x] `demo`: the whole system in one terminal (fresh store, load, feed one event per Enter, questions typed in)
+- [ ] Off-topic answers: reach an acceptable point
 - [ ] Inspect the real dump, write the mapping
 
 ### Mon 19 – Tue 20

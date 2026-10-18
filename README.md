@@ -14,12 +14,31 @@ Node.js 22 or later.
 npm install
 ```
 
+## See it in one command
+
+```sh
+./bin/redactor demo
+```
+
+One terminal, nothing to set up: a fresh store (`./demo.db`), the initial load, our scripted day of
+changes delivered one event per **Enter**, and the system following it. Type questions in the same terminal:
+
+```
+ask yusuf How many days of paid leave do I get?      # who asks, then the question
+status d02                                           # which version is indexed, when, how fresh
+access                                               # who gained or lost access, in people
+costs                                                # what it would have cost, in euros
+```
+
+The HTTP API answers on `:8080` meanwhile. What to try at each event: [`docs/try-it.md`](docs/try-it.md).
+
 ## Commands
 
 Every command prints JSON. The store is a single file, `./redactor.db` by default (`--db <path>` to change it).
 A guided tour of everything below: [`docs/try-it.md`](docs/try-it.md).
 
 ```sh
+./bin/redactor demo                              # everything above in one terminal (resets ./demo.db each run)
 ./bin/redactor ingest [--data data/sample]       # load the corpus and permission list (first run downloads the model, ~145 MB)
 ./bin/redactor ask <user_id> "<question>"        # answer with sources, from what that user may open (~3 s: loads the model)
 ./bin/redactor status <doc_id>... [--user <id>]  # which version is indexed, when, how fresh; with --user, hidden docs look unknown
