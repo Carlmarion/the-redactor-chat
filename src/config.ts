@@ -7,10 +7,11 @@ export const EMBEDDING_MODEL = {
 /** Passage size the indexer cuts to. At most the brief's 500-token cap; chosen on the eval set. */
 export const PASSAGE_TOKENS = 250;
 
+/** Extract's re-reading model (decision 0011): multilingual, reads question and passage together. */
+export const RE_READING_MODEL = { id: "Xenova/bge-reranker-base" } as const;
+
 /**
- * When a passage is good enough to be the answer (decision 0009). The model scores everything
- * between ~0.75 and ~0.90 (decision 0005), so one cut-off cannot separate right from wrong.
- * Two ways in: a high similarity on meaning alone (synonyms, other languages), or a lower one
- * backed by a word the question and the passage share.
+ * When the best passage is the answer (decision 0011), on extract's 0-to-1 likelihood:
+ * likely → the answer; plausible → the closest match, said so; below → not found.
  */
-export const ANSWER_POLICY = { high: 0.825, low: 0.8 } as const;
+export const ANSWER_POLICY = { likely: 0.5, plausible: 0.05 } as const;

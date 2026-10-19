@@ -1,6 +1,6 @@
 # 0009 — When a passage is the answer, and how big passages are
 
-Date: 2026-10-15 · Status: accepted, to re-measure on the client's data
+Date: 2026-10-15 · Status: passage size accepted; the answer thresholds are replaced by decision 0011
 
 ## Context
 The answer is the best passage, word for word. The model scores every question–passage pair

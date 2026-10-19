@@ -22,7 +22,7 @@ beforeAll(async () => {
 async function search(userId: string, text: string): Promise<Passage[]> {
   const [vector] = await embedder.embed([text]);
   if (!vector) throw new Error("no vector");
-  return retrieve(db, { text, vector, visible: visiblePassageIds(db, userId), limit: 16 }).passages;
+  return retrieve(db, { text, vector, visible: visiblePassageIds(db, userId), limit: 16 });
 }
 
 describe("fuse", () => {
@@ -81,7 +81,7 @@ describe("LocalExtractor", () => {
 });
 
 describe("ask", () => {
-  const deps = (policy = { high: 0, low: 0 }) => ({ db, embedder, extractor: new LocalExtractor(embedder), policy });
+  const deps = (policy = { likely: 0, plausible: 0 }) => ({ db, embedder, extractor: new LocalExtractor(embedder), policy });
 
   it("answers with the passage and its source", async () => {
     const result = await ask(deps(), "sanne", "bonus scheme");
@@ -94,6 +94,6 @@ describe("ask", () => {
   });
 
   it("says not found when nothing visible answers", async () => {
-    expect(await ask(deps({ high: 0.99, low: 0.99 }), "emma", "bonus scheme")).toEqual({ answer: NOT_FOUND, sources: [] });
+    expect(await ask(deps({ likely: 2, plausible: 2 }), "emma", "bonus scheme")).toEqual({ answer: NOT_FOUND, sources: [] });
   });
 });

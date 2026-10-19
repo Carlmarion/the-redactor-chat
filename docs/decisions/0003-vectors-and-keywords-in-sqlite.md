@@ -24,3 +24,22 @@ Spike on day 2. Fallback: score only the visible passages in code.
 Spike `test/vec-filter.spike.test.ts`: a KNN query with `rowid IN (SELECT …)` applies the filter
 before taking the top k. A hidden passage that is the closest match is excluded, and k is filled
 from visible passages only. Access filtering stays inside the query; no fallback needed.
+
+## The four questions (added 2026-10-19)
+The vector index is a table inside the SQLite file of decision 0002 (`passage_vec`), next to the
+keyword index (`passage_fts`): not a separate store to run.
+
+1. **Why here and not elsewhere?** It sits in the same file as the access labels, so one query
+   restricts to what the person may open and ranks by meaning. A separate vector database would
+   need the access labels copied into it and kept in step, a second place where a leak can happen.
+2. **Down or data lost?** It is derived: rebuilt from the documents with `redactor ingest` (embed
+   in batch at €7.50 per million tokens: ~€0.03 here, ~€1,900 for a million passages of 250 tokens). Until rebuilt, `ask` finds nothing,
+   and never something it should not. The event log and cost ledger, which are records, are in
+   decision 0002.
+3. **Much bigger?** sqlite-vec compares the question with every visible passage (exact, no
+   approximate index): fine to about a million passages, then each question slows down
+   linearly. One writer at a time: the watcher.
+4. **What would make us move, and at what cost?** Questions slower than about a second, or several
+   servers writing. Next step: Postgres with pgvector (approximate index, same SQL filter with
+   `rowid IN`), keyword search in Postgres too. Cost: a server to run, the store module and its
+   queries rewritten (a day or two), and a re-embed of the corpus in batch.

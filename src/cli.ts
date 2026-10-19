@@ -11,7 +11,7 @@ import { ANSWER_POLICY, PASSAGE_TOKENS } from "./config.ts";
 import { loadEvalSet, type Phase } from "./eval/eval-set.ts";
 import { formatRun, runEval } from "./eval/run-eval.ts";
 import { LocalEmbedder } from "./simulator/local-embedder.ts";
-import { LocalExtractor } from "./simulator/local-extractor.ts";
+import { ReReadingExtractor } from "./simulator/rereading-extractor.ts";
 import { MeteredEmbedder } from "./simulator/metered-embedder.ts";
 import { SqliteCostLedger } from "./store/cost-ledger.ts";
 import { openDb, type Db } from "./store/db.ts";
@@ -136,11 +136,11 @@ function costs(db: Db) {
 }
 
 async function evaluate(dataDir: string, phase: Phase, passageTokens: string | undefined, json: boolean): Promise<number> {
-  const model = await LocalEmbedder.load();
+  const [model, extractor] = await Promise.all([LocalEmbedder.load(), ReReadingExtractor.load()]);
   const set = await loadEvalSet(`${dataDir}/eval.json`);
   const runs = [];
   for (const size of (passageTokens ?? String(PASSAGE_TOKENS)).split(",").map(Number)) {
-    const setup = { dataDir, embedder: model, extractor: new LocalExtractor(model), policy: ANSWER_POLICY, passageTokens: size };
+    const setup = { dataDir, embedder: model, extractor, policy: ANSWER_POLICY, passageTokens: size };
     runs.push(await runEval(setup, set, phase));
   }
   if (json) print(runs);

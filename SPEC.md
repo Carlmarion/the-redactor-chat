@@ -69,7 +69,7 @@ Every input enters through a mapping layer, so the real format plugs in without 
 | Component | Job |
 |---|---|
 | Simulator adapter | The only door to embed, extract, feed and any model. Enforces limits and counts euros. |
-| Simulator | Our implementation of embed (local multilingual model), extract (scoring), feed (HTTP replay). |
+| Simulator | Our implementation of embed (local multilingual model), extract (a local re-reading model, decision 0011), feed (HTTP replay). |
 | Document source | Where text is read from: corpus directory now, real source later. |
 | Loader | Bootstrap: corpus + permission list → store. |
 | Chunker | Document text → passages of at most 250 tokens (model tokenizer; the brief caps them at 500, decision 0009). |
@@ -108,7 +108,7 @@ An access change rewrites labels and costs nothing; only a text change re-embeds
 2. Restrict to passages whose document grants one of those principals. **Filter before ranking.**
 3. Rank visible passages: vector similarity + keyword match (words found in more than a quarter of passages are ignored), merged.
 4. Keep the top 16 at most.
-5. Extract → best passage + its similarity. It is the answer if the similarity is high, or medium and the passage shares a meaningful word with the question; otherwise "not found in documents you can access" (decision 0009).
+5. Extract → best passage + how likely it answers the question (0 to 1), read by a model that sees the question and each passage together. Likely: the passage is the answer. Plausible: the passage is the answer, introduced as the closest match found. Otherwise "not found in documents you can access" (decision 0011).
 6. Return `{ answer, sources }`.
 
 ### Change event
@@ -193,7 +193,7 @@ Bonus, only once the core is done: React demo page, passage-level redaction, "ex
 
 ### Sat 17 – Sun 18
 - [x] `demo`: the whole system in one terminal (fresh store, load, feed one event per Enter, questions typed in)
-- [ ] Off-topic answers: reach an acceptable point
+- [ ] Off-topic answers: extract re-reads each candidate; answer, closest match, or not found (decision 0011)
 - [ ] Inspect the real dump, write the mapping
 
 ### Mon 19 – Tue 20
