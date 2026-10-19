@@ -17,6 +17,8 @@ export interface FeedSimOptions {
   step: boolean;
 }
 
+const STEP_MODE_LEAD_MS = 60 * 60 * 1000;
+
 export async function runFeedSim(o: FeedSimOptions): Promise<never> {
   const say: Say = (line) => process.stderr.write(`${line}\n`);
   const script = await startFeedSim(o, say);
@@ -26,7 +28,9 @@ export async function runFeedSim(o: FeedSimOptions): Promise<never> {
 
 /** Loads the script and serves it over HTTP; in step mode nothing is delivered until `deliverNext`. */
 export async function startFeedSim(o: FeedSimOptions, say: Say): Promise<FeedScript> {
-  const start = new Date();
+  // Step mode: a person decides when each change arrives, so the scripted day is placed in the past
+  // hour; every change they deliver has already happened at the source, never later than now.
+  const start = new Date(Date.now() - (o.step ? STEP_MODE_LEAD_MS : 0));
   const script = await FeedScript.load(o.dataDir, start, new SampleData(o.dataDir), {
     ...(o.scriptPath ? { scriptPath: o.scriptPath } : {}),
     pace: o.pace,
