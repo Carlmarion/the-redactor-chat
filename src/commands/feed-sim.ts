@@ -6,7 +6,8 @@ import { FeedScript } from "../simulator/feed-script.ts";
 import { feedServer } from "../simulator/feed-server.ts";
 import { SampleData } from "../sources/sample-data.ts";
 import { amsterdamIso } from "../time.ts";
-import { portTaken, type Say } from "./serve.ts";
+import { listen } from "./ports.ts";
+import type { Say } from "./serve.ts";
 
 export interface FeedSimOptions {
   dataDir: string;
@@ -31,12 +32,13 @@ export async function startFeedSim(o: FeedSimOptions, say: Say): Promise<FeedScr
     pace: o.pace,
     step: o.step,
   });
-  feedServer(script)
-    .on("error", portTaken(o.port, say))
-    .listen(o.port, () => {
-      say(`feed simulator on http://localhost:${o.port}  (events: /events, documents: /documents/<doc_id>)`);
-      say(o.step ? "step mode: press Enter to deliver the next event" : `timed replay from ${amsterdamIso(start)} to ${amsterdamIso(new Date(script.endsAt))} (Amsterdam time; any time in between works as ?at=)`);
-    });
+  await listen(feedServer(script), o.port, say);
+  say(`feed simulator on http://localhost:${o.port}  (events: /events, documents: /documents/<doc_id>)`);
+  say(
+    o.step
+      ? "step mode: press Enter to deliver the next event"
+      : `timed replay from ${amsterdamIso(start)} to ${amsterdamIso(new Date(script.endsAt))} (Amsterdam time; any time in between works as ?at=)`,
+  );
   return script;
 }
 
