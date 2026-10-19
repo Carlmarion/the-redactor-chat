@@ -5,6 +5,7 @@ import { createInterface } from "node:readline";
 import { FeedScript } from "../simulator/feed-script.ts";
 import { feedServer } from "../simulator/feed-server.ts";
 import { SampleData } from "../sources/sample-data.ts";
+import { amsterdamIso } from "../time.ts";
 import { portTaken, type Say } from "./serve.ts";
 
 export interface FeedSimOptions {
@@ -15,8 +16,6 @@ export interface FeedSimOptions {
   step: boolean;
 }
 
-const clock = (ms: number) => new Date(ms).toLocaleTimeString("en-GB", { timeZone: "Europe/Amsterdam" });
-
 export async function runFeedSim(o: FeedSimOptions): Promise<never> {
   const say: Say = (line) => process.stderr.write(`${line}\n`);
   const script = await startFeedSim(o, say);
@@ -26,7 +25,8 @@ export async function runFeedSim(o: FeedSimOptions): Promise<never> {
 
 /** Loads the script and serves it over HTTP; in step mode nothing is delivered until `deliverNext`. */
 export async function startFeedSim(o: FeedSimOptions, say: Say): Promise<FeedScript> {
-  const script = await FeedScript.load(o.dataDir, new Date(), new SampleData(o.dataDir), {
+  const start = new Date();
+  const script = await FeedScript.load(o.dataDir, start, new SampleData(o.dataDir), {
     ...(o.scriptPath ? { scriptPath: o.scriptPath } : {}),
     pace: o.pace,
     step: o.step,
@@ -35,7 +35,7 @@ export async function startFeedSim(o: FeedSimOptions, say: Say): Promise<FeedScr
     .on("error", portTaken(o.port, say))
     .listen(o.port, () => {
       say(`feed simulator on http://localhost:${o.port}  (events: /events, documents: /documents/<doc_id>)`);
-      say(o.step ? "step mode: press Enter to deliver the next event" : `timed replay, last event at ${clock(script.endsAt)}`);
+      say(o.step ? "step mode: press Enter to deliver the next event" : `timed replay from ${amsterdamIso(start)} to ${amsterdamIso(new Date(script.endsAt))} (Amsterdam time; any time in between works as ?at=)`);
     });
   return script;
 }

@@ -13,7 +13,8 @@ export function feedServer(script: FeedScript, now: () => number = Date.now): Se
       res.end(JSON.stringify(body));
     };
     const at = url.searchParams.get("at");
-    const moment = at === null ? now() : Date.parse(at);
+    // An unencoded "+02:00" arrives as " 02:00": a space can only be that plus.
+    const moment = at === null ? now() : Date.parse(at.replace(" ", "+"));
     if (Number.isNaN(moment)) return send(400, { error: "at must be an ISO 8601 time" });
 
     if (req.method === "GET" && url.pathname === "/events") {
