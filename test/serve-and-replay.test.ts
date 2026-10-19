@@ -72,7 +72,7 @@ describe("a reset feed", () => {
 
 describe("HTTP API", () => {
   let base = "";
-  const server = () => apiServer({ db, embedder, extractor: new LocalExtractor(embedder), policy: { high: 0, low: 0 } });
+  const server = () => apiServer({ db, embedder, extractor: new LocalExtractor(embedder), policy: { likely: 0, plausible: 0 } });
   let running: ReturnType<typeof server>;
 
   beforeAll(async () => {

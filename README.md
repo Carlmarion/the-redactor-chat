@@ -30,7 +30,9 @@ access                                               # who gained or lost access
 costs                                                # what it would have cost, in euros
 ```
 
-The HTTP API answers on `:8080` meanwhile. What to try at each event: [`docs/try-it.md`](docs/try-it.md).
+An answer is the passage that answers the question, with its source. When the best passage only
+probably answers it, it starts with "The closest I found, it may not fully answer your question:";
+when nothing does, the answer says so (decision 0011). The HTTP API answers on `:8080` meanwhile. What to try at each event: [`docs/try-it.md`](docs/try-it.md).
 
 ## Commands
 
@@ -39,8 +41,8 @@ A guided tour of everything below: [`docs/try-it.md`](docs/try-it.md).
 
 ```sh
 ./bin/redactor demo                              # everything above in one terminal (resets ./demo.db each run)
-./bin/redactor ingest [--data data/sample]       # load the corpus and permission list (first run downloads the model, ~145 MB)
-./bin/redactor ask <user_id> "<question>"        # answer with sources, from what that user may open (~3 s: loads the model)
+./bin/redactor ingest [--data data/sample]       # load the corpus and permission list (first run downloads the embedding model, ~130 MB)
+./bin/redactor ask <user_id> "<question>"        # answer with sources, from what that user may open (~5 s: loads the models; first run downloads the re-reading model, ~290 MB)
 ./bin/redactor status <doc_id>... [--user <id>]  # which version is indexed, when, how fresh; with --user, hidden docs look unknown
 ./bin/redactor serve [--port 8080] [--feed-url <url>]
                                                  # HTTP: POST /ask {user_id, question}, GET /status/<doc_id>[?user_id=]

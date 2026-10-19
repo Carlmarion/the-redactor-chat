@@ -18,6 +18,13 @@ Open questions to the client are tracked in the daily updates.
 | C8 | Access changes daily | How do team or folder access changes arrive? | **On the same feed**, as their own event type. The watcher dispatches by type | "Documents and access change every day": one feed |
 | C12 | "The corpus … from IT" | Document formats unspecified: a shared drive holds scans, images, PDFs | We index **text**. Image alt text and captions are kept as text. A document with no readable text is indexed as **`not_searchable`**, logged with its reason, and visible in `status`. No OCR | A silent gap is worse than a visible one: staff would be told "nothing found" when the answer is in a scan |
 
+## The simulator
+
+| # | Given | Gap | Our reading |
+|---|---|---|---|
+| C13 | "Every simulator call takes an optional `at` timestamp" | Embed and extract run inside our process; nothing is scheduled for them | `at` is honoured where something is scripted: the feed (`/events?at=`, `/documents/:id?at=`). Embed and extract give the same result at any time, so they take no `at` |
+| C14 | "Batch is half price and done within an hour" | When within the hour? | Our batch is billed at half price, unthrottled, and returns at once (an hour is the upper bound, and 0 is within it). The initial load runs in batch; anything that keeps answers fresh runs in realtime |
+
 ## Outbound: ask and status
 
 | # | Given | Gap | Our reading |

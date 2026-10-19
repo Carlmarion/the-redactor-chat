@@ -21,15 +21,9 @@ export interface RetrievalQuery {
   limit: number;
 }
 
-export interface Retrieved {
-  /** Best first, at most `limit`. */
-  passages: Passage[];
-  /** Passages the keyword search found: a second, independent signal for the answer policy. */
-  keywordHits: Set<number>;
-}
-
-export function retrieve(db: Db, query: RetrievalQuery): Retrieved {
-  if (query.visible.length === 0) return { passages: [], keywordHits: new Set() };
+/** Best first, at most `limit`. */
+export function retrieve(db: Db, query: RetrievalQuery): Passage[] {
+  if (query.visible.length === 0) return [];
   const visible = JSON.stringify(query.visible);
 
   const byMeaning = db
@@ -56,7 +50,7 @@ export function retrieve(db: Db, query: RetrievalQuery): Retrieved {
     : [];
 
   const ids = fuse([byMeaning, byKeywords]).slice(0, query.limit);
-  return { passages: loadPassages(db, ids), keywordHits: new Set(byKeywords) };
+  return loadPassages(db, ids);
 }
 
 /** The question's words as the keyword index stores them: lower case, accents removed, once each. */

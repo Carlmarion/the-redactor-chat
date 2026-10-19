@@ -3,7 +3,7 @@
 // the whole scripted feed has been applied by the real watcher and reconciler.
 
 import { askTraced } from "../ask.ts";
-import type { AnswerPolicy } from "../answer-policy.ts";
+import type { AnswerBand, AnswerPolicy } from "../answer-policy.ts";
 import { EventLog } from "../feed/event-log.ts";
 import { Reconciler } from "../feed/reconciler.ts";
 import { FeedWatcher, WIDEN_SETTLE_MS } from "../feed/watcher.ts";
@@ -23,7 +23,7 @@ export interface EvalRow {
   id: string;
   user: string;
   score: number | null;
-  shares_keyword: boolean;
+  band: AnswerBand;
   cited: string | null;
   expected: string;
   verdict: Verdict;
@@ -68,7 +68,7 @@ export async function runEval(setup: EvalSetup, set: EvalSet, phase: Phase): Pro
       id: q.id,
       user: q.user,
       score: trace.score,
-      shares_keyword: trace.sharesKeyword,
+      band: trace.band,
       cited: result.sources[0]?.doc_id ?? null,
       expected: expectation(q),
       verdict: judge(q, result),
@@ -134,7 +134,7 @@ export function formatRun(run: EvalRun): string {
       r.id.padEnd(4),
       r.user.padEnd(6),
       (r.score?.toFixed(3) ?? "  -  ").padEnd(6),
-      (r.shares_keyword ? "word" : "    ").padEnd(5),
+      r.band.padEnd(9),
       (r.cited ?? "-").padEnd(4),
       r.expected.padEnd(12),
       r.verdict.toUpperCase(),
@@ -143,7 +143,7 @@ export function formatRun(run: EvalRun): string {
   const checks = run.status.map((s) => `status ${s.doc_id.padEnd(4)} ${s.pass ? "PASS" : "MISS"}  expected ${s.expected}, got ${s.got}`);
   return [
     `${run.phase}, passages ≤ ${run.passage_tokens} tokens: ${run.passed}/${run.total} pass, ${run.leaks} leaks`,
-    "id   user   score  key   got  expected     verdict",
+    "id   user   score  band      got  expected     verdict",
     ...lines,
     ...checks,
   ].join("\n");

@@ -1,6 +1,6 @@
-// The simulator's extract mode: takes a question and at most 16 passages, returns the best passage
-// and its score. Whether that passage is good enough is our decision (answer-policy.ts), not the
-// simulator's. Runs the embedding model internally; extract has no price in the brief.
+// A light extract: the best of at most 16 passages by embedding similarity, with the model already
+// loaded for embed. The system extracts with the re-reading model (decision 0011); this one keeps
+// tests fast and free of a second model download.
 
 import type { Embedder, ExtractResult, Extractor } from "../ports.ts";
 import type { Passage } from "../types.ts";
