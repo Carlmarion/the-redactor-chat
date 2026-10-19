@@ -81,6 +81,11 @@ describe("over HTTP", () => {
     expect(((await res.json()) as { events: unknown[] }).events).toHaveLength(1);
     expect((await fetch(`${base}/events?at=yesterday`)).status).toBe(400);
   });
+
+  it("takes `at` typed by hand, where the URL turns the + of the offset into a space", async () => {
+    const res = await fetch(`${base}/events?at=2026-10-16T10:00:15+02:00`);
+    expect(((await res.json()) as { events: unknown[] }).events).toHaveLength(1);
+  });
 });
 
 describe("parseFeedEvent", () => {
