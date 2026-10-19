@@ -13,6 +13,7 @@ import type { AskResult } from "../types.ts";
 import { parseDemoLine } from "./demo-line.ts";
 import { deliverNext, startFeedSim } from "./feed-sim.ts";
 import { ingest } from "./ingest.ts";
+import { ensurePortsFree } from "./ports.ts";
 import { amsterdamTime, followFeed, startApi, type Say } from "./serve.ts";
 import { openSystem } from "./system.ts";
 
@@ -33,6 +34,7 @@ const HELP = `  Enter                        deliver the next event of the day
 
 export async function runDemo(o: DemoOptions): Promise<number> {
   const say: Say = (line) => process.stdout.write(`${amsterdamTime()} ${line}\n`);
+  await ensurePortsFree([o.feedPort, o.apiPort], say);
   for (const suffix of ["", "-wal", "-shm"]) rmSync(`${o.dbPath}${suffix}`, { force: true });
 
   say(`fresh store at ${o.dbPath}, loading the documents and the permission list…`);
@@ -51,7 +53,7 @@ export async function runDemo(o: DemoOptions): Promise<number> {
     },
     say,
   );
-  startApi(system, o.apiPort, say);
+  await startApi(system, o.apiPort, say);
   followFeed(system, feedUrl, undefined, say);
   process.stdout.write(`\n${HELP}\n\n`);
 

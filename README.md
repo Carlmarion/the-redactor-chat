@@ -95,6 +95,7 @@ curl localhost:4100/documents/d02          # the document's current text (events
 npm test
 npm run typecheck
 npm run lint
+npx tsx scripts/bench-vectors.ts   # vector search at 10k, 100k and 1M passages (decision 0003)
 ```
 
 How this project is built with an AI assistant, and the quality gate every change passes:

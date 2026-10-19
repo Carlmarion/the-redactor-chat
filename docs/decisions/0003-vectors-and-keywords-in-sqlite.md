@@ -37,8 +37,17 @@ keyword index (`passage_fts`): not a separate store to run.
    and never something it should not. The event log and cost ledger, which are records, are in
    decision 0002.
 3. **Much bigger?** sqlite-vec compares the question with every visible passage (exact, no
-   approximate index): fine to about a million passages, then each question slows down
-   linearly. One writer at a time: the watcher.
+   approximate index), so time grows in a straight line with the corpus. Measured with
+   `npx tsx scripts/bench-vectors.ts` (random vectors, the person may open half, nearest 16, on a laptop):
+
+   | Passages | Query, median |
+   |---|---|
+   | 10,000 | 5 ms |
+   | 100,000 | 55 ms |
+   | 1,000,000 | 561 ms |
+
+   Add ~0.4 s for extract's re-reading (decision 0011) and the question's embedding: about a
+   second per question at a million passages. One writer at a time: the watcher.
 4. **What would make us move, and at what cost?** Questions slower than about a second, or several
    servers writing. Next step: Postgres with pgvector (approximate index, same SQL filter with
    `rowid IN`), keyword search in Postgres too. Cost: a server to run, the store module and its

@@ -7,6 +7,7 @@ import { FeedWatcher } from "../feed/watcher.ts";
 import { apiServer } from "../http/api-server.ts";
 import { Indexer } from "../ingest/indexer.ts";
 import { HttpDocumentSource, HttpFeedReader } from "../sources/http-feed.ts";
+import { listen } from "./ports.ts";
 import { openSystem, type System } from "./system.ts";
 
 export interface ServeOptions {
@@ -21,23 +22,14 @@ export type Say = (line: string) => void;
 export async function runServe(o: ServeOptions): Promise<never> {
   const system = await openSystem(o.dbPath);
   const say: Say = (line) => process.stderr.write(`${amsterdamTime()} ${line}\n`);
-  startApi(system, o.port, say);
+  await startApi(system, o.port, say);
   if (o.feedUrl) followFeed(system, o.feedUrl, o.documentsUrl, say);
   return new Promise<never>(() => undefined);
 }
 
-export function startApi(system: System, port: number, say: Say): void {
-  apiServer(system)
-    .on("error", portTaken(port, say))
-    .listen(port, () => say(`answering on http://localhost:${port}  (POST /ask, GET /status/<doc_id>)`));
-}
-
-/** A port already in use is almost always a `serve`, `feed-sim` or `demo` still running elsewhere. */
-export function portTaken(port: number, say: Say) {
-  return (e: NodeJS.ErrnoException) => {
-    say(e.code === "EADDRINUSE" ? `port ${port} is taken, probably by a serve, feed-sim or demo still running: lsof -i :${port}` : String(e));
-    process.exit(1);
-  };
+export async function startApi(system: System, port: number, say: Say): Promise<void> {
+  await listen(apiServer(system), port, say);
+  say(`answering on http://localhost:${port}  (POST /ask, GET /status/<doc_id>)`);
 }
 
 /** Polls the feed every second and reconciles; every decision is told through `say`. */
