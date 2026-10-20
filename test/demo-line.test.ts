@@ -17,9 +17,16 @@ describe("parseDemoLine", () => {
     expect(parseDemoLine("status d10 anouk")).toEqual({ kind: "status", docId: "d10", userId: "anouk" });
   });
 
+  it("sees takes exactly one user", () => {
+    expect(parseDemoLine("sees anouk")).toEqual({ kind: "sees", userId: "anouk" });
+    expect(parseDemoLine("sees")).toEqual({ kind: "unknown", text: "sees" });
+    expect(parseDemoLine("sees anouk emma")).toEqual({ kind: "unknown", text: "sees anouk emma" });
+  });
+
   it("knows the read-only views and quitting", () => {
     expect(parseDemoLine("access")).toEqual({ kind: "access" });
     expect(parseDemoLine("costs")).toEqual({ kind: "costs" });
+    expect(parseDemoLine("people")).toEqual({ kind: "people" });
     expect(parseDemoLine("help")).toEqual({ kind: "help" });
     expect(parseDemoLine("quit")).toEqual({ kind: "quit" });
   });

@@ -5,11 +5,12 @@
 
 import { rmSync } from "node:fs";
 import { createInterface } from "node:readline";
+import { foldersSeenBy, people, type Person, type VisibleFolder } from "../access/who-sees-what.ts";
 import { ask } from "../ask.ts";
 import { status } from "../status.ts";
 import { SqliteCostLedger, type CostLine } from "../store/cost-ledger.ts";
 import type { Db } from "../store/db.ts";
-import type { AskResult } from "../types.ts";
+import type { AskResult, UserId } from "../types.ts";
 import { parseDemoLine } from "./demo-line.ts";
 import { deliverNext, startFeedSim } from "./feed-sim.ts";
 import { ingest } from "./ingest.ts";
@@ -27,7 +28,10 @@ export interface DemoOptions {
 
 const HELP = `  Enter                        deliver the next event of the day
   ask <user> <question>        answer from what that person may open, e.g.  ask yusuf How many days of paid leave do I get?
-  status <doc_id> [<user>]     which version is indexed, when, how fresh
+  status <doc_id> [<user>]     which version is indexed, when, how fresh; for someone who may not
+                               open it, it looks exactly like a document that does not exist
+  people                       everyone who can ask, and their teams
+  sees <user>                  the folders that person may open right now, e.g.  sees anouk
   access                       every change in who can see a document, in people
   costs                        what the simulator calls would have cost
   quit`;
@@ -73,6 +77,12 @@ export async function runDemo(o: DemoOptions): Promise<number> {
       case "access":
         process.stdout.write(formatAccessLog(system.db));
         break;
+      case "people":
+        process.stdout.write(formatPeople(system.db));
+        break;
+      case "sees":
+        process.stdout.write(formatFoldersSeen(system.db, command.userId));
+        break;
       case "costs":
         process.stdout.write(formatCosts(system.db));
         break;
@@ -111,6 +121,18 @@ function formatAccessLog(db: Db): string {
   const line = (r: (typeof rows)[number]) =>
     `  ${r.at.slice(11, 19)} ${r.doc_id}: ${r.folder_before ?? "-"} → ${r.folder_after ?? "-"}, ${r.people_before} → ${r.people_after} people${r.widened ? " (widened)" : ""}`;
   return `${rows.map(line).join("\n")}\n`;
+}
+
+function formatPeople(db: Db): string {
+  const line = (p: Person) => `  ${p.userId.padEnd(8)} ${p.groups.join(", ")}`;
+  return `${people(db).map(line).join("\n")}\n`;
+}
+
+function formatFoldersSeen(db: Db, userId: UserId): string {
+  const folders = foldersSeenBy(db, userId);
+  if (folders.length === 0) return `${userId} may open nothing (not in the permission list, or in no folder's rule)\n`;
+  const line = (f: VisibleFolder) => `  ${f.folder.padEnd(14)} ${f.documents} document${f.documents === 1 ? "" : "s"}`;
+  return `${folders.map(line).join("\n")}\n`;
 }
 
 function formatCosts(db: Db): string {

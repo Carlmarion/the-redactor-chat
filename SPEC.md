@@ -192,7 +192,8 @@ Bonus, only once the core is done: React demo page, passage-level redaction, "ex
 - [x] Core green
 
 ### Sat 17 – Sun 18
-- [x] `demo`: the whole system in one terminal (fresh store, load, feed one event per Enter, questions typed in)
+- [x] `demo`: the whole system in one terminal (fresh store, load, feed one event per Enter, questions typed in; `people` lists who can ask, `sees <user>` the folders that person may open, through the access filter)
+- [x] First run says which model is downloading and how far it is
 - [ ] Off-topic answers: extract re-reads each candidate; answer, closest match, or not found (decision 0011)
 - [ ] Inspect the real dump, write the mapping
 

@@ -7,6 +7,7 @@ import { RE_READING_MODEL } from "../config.ts";
 import type { ExtractResult, Extractor } from "../ports.ts";
 import type { Passage } from "../types.ts";
 import { EXTRACT } from "./limits.ts";
+import { downloadProgress } from "./model-download.ts";
 import "./local-embedder.ts"; // shares its model cache directory (./.models)
 
 export class ReReadingExtractor implements Extractor {
@@ -17,9 +18,10 @@ export class ReReadingExtractor implements Extractor {
 
   /** Loads the model, downloading it once into ./.models. */
   static async load(): Promise<ReReadingExtractor> {
+    const download = downloadProgress(RE_READING_MODEL.id);
     const [tokenizer, model] = await Promise.all([
-      AutoTokenizer.from_pretrained(RE_READING_MODEL.id),
-      AutoModelForSequenceClassification.from_pretrained(RE_READING_MODEL.id, { dtype: "q8" }),
+      AutoTokenizer.from_pretrained(RE_READING_MODEL.id, download),
+      AutoModelForSequenceClassification.from_pretrained(RE_READING_MODEL.id, { dtype: "q8", ...download }),
     ]);
     return new ReReadingExtractor(tokenizer, model);
   }

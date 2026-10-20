@@ -42,8 +42,8 @@ node --version
 With the repository address you were given (on its web page: green **Code** button → copy the address):
 
 ```sh
-git clone <repository address> the-redactor
-cd the-redactor
+git clone <repository address> the-redactor-chat
+cd the-redactor-chat
 ```
 
 `cd` moves the terminal into the folder you just downloaded. **Run every command from here on in
@@ -67,7 +67,8 @@ About a minute. Warnings in yellow are normal; it ends with a line such as `adde
 On **Windows**, type instead: `npm run redactor -- demo`
 
 **The first time only**, it downloads two small open AI models (about 420 MB, a few minutes,
-saved in the folder for next time). Then you see:
+saved in the folder for next time). Lines such as
+`Xenova/multilingual-e5-small onnx/model_quantized.onnx: 50% of 118 MB` show how far it is. Then you see:
 
 ```
 16:10:47 loaded 21 documents (23 passages) for €0.025777
@@ -93,13 +94,19 @@ You do one of two things, as often as you like:
 |---|---|---|
 | ask a question as someone | `ask`, the person, the question | `ask yusuf How many days of paid leave do I get?` |
 | see which version of a document is in use | `status`, the document | `status d02` |
-| … as a given person (hidden documents look unknown) | `status`, the document, the person | `status d10 anouk` |
+| … as a given person | `status`, the document, the person | `status d10 anouk` |
+| see everyone who can ask, and their teams | `people` | `people` |
+| see which folders a person may open right now | `sees`, the person | `sees anouk` |
 | see who gained or lost access, in people | `access` | `access` |
 | see what it would have cost | `costs` | `costs` |
 | see the list of commands | `help` | `help` |
 | stop | `quit` | `quit` |
 
 No quotes needed. The people and documents you can use are in step 7.
+
+`status` as a person who may not open the document answers exactly as for a document that does not
+exist (`not_indexed`). That is on purpose: otherwise anyone could ask about an id and learn that a
+hidden document exists.
 
 ## Step 7. Who is who
 

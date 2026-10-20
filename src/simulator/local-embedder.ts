@@ -2,6 +2,7 @@
 import { AutoTokenizer, pipeline, env, type FeatureExtractionPipeline, type PreTrainedTokenizer } from "@huggingface/transformers";
 import { EMBEDDING_MODEL } from "../config.ts";
 import type { EmbedKind, Embedder } from "../ports.ts";
+import { downloadProgress } from "./model-download.ts";
 
 // e5 models are trained with these prefixes; leaving them out degrades retrieval.
 const PREFIX: Record<EmbedKind, string> = { query: "query: ", passage: "passage: " };
@@ -18,9 +19,10 @@ export class LocalEmbedder implements Embedder {
 
   /** Loads the model, downloading it once into ./.models. */
   static async load(): Promise<LocalEmbedder> {
+    const download = downloadProgress(EMBEDDING_MODEL.id);
     const [tokenizer, extractor] = await Promise.all([
-      AutoTokenizer.from_pretrained(EMBEDDING_MODEL.id),
-      pipeline("feature-extraction", EMBEDDING_MODEL.id, { dtype: "q8" }),
+      AutoTokenizer.from_pretrained(EMBEDDING_MODEL.id, download),
+      pipeline("feature-extraction", EMBEDDING_MODEL.id, { dtype: "q8", ...download }),
     ]);
     return new LocalEmbedder(tokenizer, extractor);
   }
