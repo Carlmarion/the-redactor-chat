@@ -7,6 +7,8 @@ export type DemoCommand =
   | { kind: "ask"; userId: UserId; question: string }
   | { kind: "status"; docId: DocId; userId?: UserId }
   | { kind: "access" }
+  | { kind: "people" }
+  | { kind: "sees"; userId: UserId }
   | { kind: "costs" }
   | { kind: "help" }
   | { kind: "quit" }
@@ -14,6 +16,7 @@ export type DemoCommand =
 
 const VIEWS: Partial<Record<string, DemoCommand>> = {
   access: { kind: "access" },
+  people: { kind: "people" },
   costs: { kind: "costs" },
   help: { kind: "help" },
   quit: { kind: "quit" },
@@ -33,6 +36,9 @@ export function parseDemoLine(line: string): DemoCommand {
     if (!first) return unknown;
     const [userId] = rest;
     return userId ? { kind: "status", docId: first, userId } : { kind: "status", docId: first };
+  }
+  if (word === "sees") {
+    return first && rest.length === 0 ? { kind: "sees", userId: first } : unknown;
   }
   const view = VIEWS[word];
   return view && !first ? view : unknown;
