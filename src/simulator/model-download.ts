@@ -8,7 +8,9 @@ import { env, type ProgressCallback } from "@huggingface/transformers";
 
 env.cacheDir = new URL("../../.models/", import.meta.url).pathname;
 
-const BAR_WIDTH = 24;
+const BAR_MAX = 24;
+const BAR_MIN = 8;
+const LABEL = "downloading the AI models";
 const MB = 1_000_000;
 
 export interface ModelDownload {
@@ -25,7 +27,7 @@ let shownPercent = -1;
 
 export function startDownload(modelId: string, out: NodeJS.WriteStream = process.stderr): ModelDownload {
   if (existsSync(`${env.cacheDir}${modelId}`)) return { options: {}, finish: () => {} };
-  if (downloading++ === 0 && !out.isTTY) out.write("downloading the AI models (first run only)…\n");
+  if (downloading++ === 0 && !out.isTTY) out.write(`${LABEL} (first run only)…\n`);
   const progress_callback: ProgressCallback = (info) => {
     // Each loading call reports every file it needs, with sizes known from the start; files shared
     // between calls (the tokenizer) are counted once.
@@ -55,15 +57,26 @@ function totals(): { loaded: number; total: number } {
   return { loaded, total };
 }
 
-/** Redraws the bar on its own line, only when the percent changes. */
+/**
+ * Redraws the bar in place, only when the percent changes. The line never exceeds the window's
+ * width: a wrapped line cannot be redrawn, so each update would stack below the last one.
+ */
 function drawBar(out: NodeJS.WriteStream): void {
   const { loaded, total } = totals();
   const percent = total === 0 ? 0 : Math.floor((loaded / total) * 100);
   if (percent === shownPercent) return;
   shownPercent = percent;
-  const filled = Math.round((percent / 100) * BAR_WIDTH);
-  const bar = "█".repeat(filled) + "░".repeat(BAR_WIDTH - filled);
-  out.write(
-    `\r\x1b[2Kdownloading the AI models (first run only)  ▕${bar}▏ ${String(percent).padStart(3)}%  ${Math.round(loaded / MB)} / ${Math.round(total / MB)} MB`,
-  );
+  out.write(`\r\x1b[2K${barLine(percent, loaded, total, out.columns || 80)}`);
+}
+
+export function barLine(percent: number, loaded: number, total: number, columns: number): string {
+  const figures = `${String(percent).padStart(3)}%  ${Math.round(loaded / MB)} / ${Math.round(total / MB)} MB`;
+  const room = columns - 1 - LABEL.length - figures.length - 4; // two spaces and the bar's two ends
+  const width = Math.min(BAR_MAX, room);
+  if (width < BAR_MIN) {
+    const plain = `${LABEL} ${figures}`;
+    return (plain.length < columns ? plain : figures).slice(0, columns - 1);
+  }
+  const filled = Math.round((percent / 100) * width);
+  return `${LABEL}  ▕${"█".repeat(filled)}${"░".repeat(width - filled)}▏${figures}`;
 }
