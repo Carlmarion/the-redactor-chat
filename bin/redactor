@@ -1,4 +1,10 @@
 #!/bin/sh
 # Runs the CLI from anywhere inside the repo without a build step.
 DIR="$(cd "$(dirname "$0")/.." && pwd)"
+if [ ! -x "$DIR/node_modules/.bin/tsx" ]; then
+  echo "The project is not installed yet. Run this first, in $DIR:" >&2
+  echo "  npm install" >&2
+  echo "(README, step 4), then run the command again." >&2
+  exit 1
+fi
 exec "$DIR/node_modules/.bin/tsx" "$DIR/src/cli.ts" "$@"
