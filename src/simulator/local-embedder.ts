@@ -1,13 +1,11 @@
 // The simulator's embed mode: one small open multilingual model, run locally (decision 0005).
-import { AutoTokenizer, pipeline, env, type FeatureExtractionPipeline, type PreTrainedTokenizer } from "@huggingface/transformers";
+import { AutoTokenizer, pipeline, type FeatureExtractionPipeline, type PreTrainedTokenizer } from "@huggingface/transformers";
 import { EMBEDDING_MODEL } from "../config.ts";
 import type { EmbedKind, Embedder } from "../ports.ts";
-import { downloadProgress } from "./model-download.ts";
+import { startDownload } from "./model-download.ts";
 
 // e5 models are trained with these prefixes; leaving them out degrades retrieval.
 const PREFIX: Record<EmbedKind, string> = { query: "query: ", passage: "passage: " };
-
-env.cacheDir = new URL("../../.models/", import.meta.url).pathname;
 
 export class LocalEmbedder implements Embedder {
   readonly dimensions = EMBEDDING_MODEL.dimensions;
@@ -19,12 +17,16 @@ export class LocalEmbedder implements Embedder {
 
   /** Loads the model, downloading it once into ./.models. */
   static async load(): Promise<LocalEmbedder> {
-    const download = downloadProgress(EMBEDDING_MODEL.id);
-    const [tokenizer, extractor] = await Promise.all([
-      AutoTokenizer.from_pretrained(EMBEDDING_MODEL.id, download),
-      pipeline("feature-extraction", EMBEDDING_MODEL.id, { dtype: "q8", ...download }),
-    ]);
-    return new LocalEmbedder(tokenizer, extractor);
+    const download = startDownload(EMBEDDING_MODEL.id);
+    try {
+      const [tokenizer, extractor] = await Promise.all([
+        AutoTokenizer.from_pretrained(EMBEDDING_MODEL.id, download.options),
+        pipeline("feature-extraction", EMBEDDING_MODEL.id, { dtype: "q8", ...download.options }),
+      ]);
+      return new LocalEmbedder(tokenizer, extractor);
+    } finally {
+      download.finish();
+    }
   }
 
   /** Tokens as the model counts them, prefix included. */
