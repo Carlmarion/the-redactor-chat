@@ -1,6 +1,6 @@
 // The first-run download report: one bar redrawn in place in a terminal, two lines in a log.
 import { describe, expect, it } from "vitest";
-import { startDownload } from "../src/simulator/model-download.ts";
+import { barLine, startDownload } from "../src/simulator/model-download.ts";
 
 function fakeOut(isTTY: boolean) {
   const writes: string[] = [];
@@ -43,5 +43,13 @@ describe("startDownload", () => {
     download.options.progress_callback?.(total(200_000_000));
     download.finish();
     expect(writes).toEqual(["downloading the AI models (first run only)…\n", "models downloaded (200 MB)\n"]);
+  });
+
+  it("never draws a line wider than the window, so it never wraps and stacks", () => {
+    for (const columns of [30, 50, 64, 80, 200]) {
+      expect(barLine(51, 212_000_000, 415_000_000, columns).length, `${columns} columns`).toBeLessThan(columns);
+    }
+    expect(barLine(51, 212_000_000, 415_000_000, 200)).toContain("▕████████████░░░░░░░░░░░░▏");
+    expect(barLine(51, 212_000_000, 415_000_000, 50)).toBe("downloading the AI models  51%  212 / 415 MB");
   });
 });
