@@ -67,8 +67,8 @@ About a minute. Warnings in yellow are normal; it ends with a line such as `adde
 On **Windows**, type instead: `npm run redactor -- demo`
 
 **The first time only**, it downloads two small open AI models (about 420 MB, a few minutes,
-saved in the folder for next time). Lines such as
-`Xenova/multilingual-e5-small onnx/model_quantized.onnx: 50% of 118 MB` show how far it is. Then you see:
+saved in the folder for next time). A bar fills up while it downloads:
+`downloading the AI models (first run only)  ▕████████████░░░░░░░░░░░░▏  51%  212 / 415 MB`. Then you see:
 
 ```
 16:10:47 loaded 21 documents (23 passages) for €0.025777
