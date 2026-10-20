@@ -79,7 +79,7 @@ export class Reconciler {
       await this.indexer.index({
         doc_id: docId,
         path: latest.path,
-        title: plan.current?.title ?? firstHeading(text) ?? known?.title ?? basename(latest.path),
+        title: titleOf(plan.current, known, latest.path),
         url: known?.url ?? null,
         text,
         version: latest.modified_at,
@@ -93,7 +93,9 @@ export class Reconciler {
         this.stamp(docId, latest.modified_at, now, first, { deleted: true, revision: true });
       }
       if (decision.kind === "relabel") {
-        this.db.prepare("UPDATE documents SET previous_path = path, path = ? WHERE doc_id = ?").run(latest.path, docId);
+        this.db
+          .prepare("UPDATE documents SET previous_path = path, path = ?, title = ? WHERE doc_id = ?")
+          .run(latest.path, titleOf(plan.current, known, latest.path), docId);
         labelDocument(this.db, docId, latest.path);
         this.stamp(docId, latest.modified_at, now, first, { revision: true });
       }
@@ -147,6 +149,11 @@ function latestOf(events: LoggedEvent[]): Plan["latest"] {
   const latest = sorted.at(-1);
   if (!latest?.path || !latest.modified_at || !latest.action) throw new Error("a document event needs a path, a time and an action");
   return latest as Plan["latest"];
+}
+
+/** The title answers cite: the source's, else the text's first heading, else what we held, else the file name. */
+function titleOf(current: SourceDocument | null, known: { title: string } | null, path: string): string {
+  return current?.title ?? firstHeading(current?.text ?? "") ?? known?.title ?? basename(path);
 }
 
 function firstHeading(text: string): string | null {
