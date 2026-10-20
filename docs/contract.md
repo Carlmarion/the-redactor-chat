@@ -29,7 +29,7 @@ Open questions to the client are tracked in the daily updates.
 
 | # | Given | Gap | Our reading |
 |---|---|---|---|
-| C9 | `sources[]` | Shape undefined | `{ doc_id, path, title, passage_id, snippet, url }`, with `url` nullable |
+| C9 | `sources[]` | Shape undefined | `{ doc_id, path, title, passage_id, snippet, url }`, with `url` nullable. `title`: the document source's, else the text's first heading, else the last known, else the file name; recomputed on every change, a move or rename included |
 | C10 | `answer` | No-answer case, unknown user | Explicit messages: "not found in documents you can access". Unknown user sees nothing |
 | C11 | `status(doc_id) -> {indexed_version, indexed_at}` | Type of version; unknown or deleted doc | `indexed_version` = `modified_at` of the last state applied (comparable with the feed). Extra fields: `revision` (count of states indexed), `freshness_seconds` (feed delivery → answerable, computed; null after the initial load). `indexed_version` and `indexed_at` are always present, `null` when never indexed. **No path or title**: `status` takes no user, so it must not reveal where a document lives. With an optional `user_id`, a document that user cannot open answers exactly like an unknown one |
 
